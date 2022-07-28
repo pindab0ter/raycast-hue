@@ -1,31 +1,15 @@
-import { ActionPanel, Action, Icon, List } from "@raycast/api";
-
-const ITEMS = Array.from(Array(3).keys()).map((key) => {
-  return {
-    id: key,
-    title: "Title " + key,
-    subtitle: "Subtitle",
-    accessory: "Accessory",
-  };
-});
+import { List } from "@raycast/api";
+import { useState } from "react";
+import { getBridgeIpAddress } from "./hue";
 
 export default function Command() {
-  return (
-    <List>
-      {ITEMS.map((item) => (
-        <List.Item
-          key={item.id}
-          icon="list-icon.png"
-          title={item.title}
-          subtitle={item.subtitle}
-          accessories={[{ icon: Icon.Text, text: item.accessory }]}
-          actions={
-            <ActionPanel>
-              <Action.CopyToClipboard content={item.title} />
-            </ActionPanel>
-          }
-        />
-      ))}
-    </List>
-  );
+  const [bridgeIpAddress, setBridgeIpAddress] = useState<string | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
+
+  getBridgeIpAddress().then((bridgeIpAddress) => {
+    setIsLoading(false);
+    setBridgeIpAddress(bridgeIpAddress);
+  });
+
+  return <List isLoading={isLoading}>{bridgeIpAddress && <List.Item title={bridgeIpAddress} />}</List>;
 }
