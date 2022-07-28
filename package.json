@@ -8,8 +8,8 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "index",
-      "title": "Show List",
+      "name": "connect-to-hue-bridge",
+      "title": "Connect to Hue Bridge",
       "description": "Template for showing a static list",
       "mode": "view"
     }
