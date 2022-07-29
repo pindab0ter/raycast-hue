@@ -1,0 +1,43 @@
+@startuml
+'https://plantuml.com/activity-diagram-beta
+
+start
+
+
+    if (Hue.Discover) then (failure)
+        :Display "No Bridge found";
+        stop
+    else (success)
+        :LocalStorage.setIpAddress;
+    endif
+
+    if (LocalStorage.getUsername?) is (found) then
+    else (not found)
+        :Wait for user input;
+        if (Hue.Register) is (success) then
+            :LocalStorage.setUsername;
+        else (failure)
+            :Display "Failed to link";
+            if (Remove known bridge?) is (yes) then
+                :Go to start;
+                kill
+            else (no)
+                stop
+            endif
+        endif
+    endif
+
+
+if (Hue.Authenticate) is (success) then
+else (failure)
+    :Display "Failed to connect";
+    if (Remove known bridge?) is (yes) then
+        :Go to start;
+        kill
+    else (no)
+        stop
+    endif
+endif
+
+stop
+@enduml
