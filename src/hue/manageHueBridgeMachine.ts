@@ -22,10 +22,13 @@ export interface HueContext {
   toast: Toast;
 }
 
+/**
+ * @see https://stately.ai/viz/ee0edf94-7a82-4d65-a6a8-324e2f1eca49
+ */
 export const manageHueBridgeMachine = createMachine<HueContext>(
   {
     id: "manage-hue-bridge",
-    initial: "loadCredentialsFromLocalStorage",
+    initial: "loadCredentials",
     context: {
       bridgeIpAddress: undefined,
       bridgeUsername: undefined,
@@ -35,9 +38,9 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
       toast: new Toast({ style: Style.Animated, title: "" }),
     },
     states: {
-      loadCredentialsFromLocalStorage: {
+      loadCredentials: {
         invoke: {
-          id: "getBridgeCredentials",
+          id: "loadCredentials",
           src: async () => {
             const bridgeIpAddress = await LocalStorage.getItem<string>(BRIDGE_IP_ADDRESS_KEY);
             const bridgeUsername = await LocalStorage.getItem<string>(BRIDGE_USERNAME_KEY);
@@ -142,7 +145,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
       connected: {
         entry: "showConnected",
         invoke: {
-          id: "saveCredentialsToLocalStorage",
+          id: "saveCredentials",
           src: async (context) => {
             if (context.bridgeIpAddress === undefined) throw Error("No bridge IP address");
             if (context.bridgeUsername === undefined) throw Error("No bridge username");
@@ -151,14 +154,14 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
           },
         },
         on: {
-          REMOVE: {
-            target: "removing",
+          UNLINK: {
+            target: "unlinking",
           },
         },
       },
-      removing: {
+      unlinking: {
         invoke: {
-          id: "removing",
+          id: "unlinking",
           src: async (context) => {
             context.bridgeIpAddress = undefined;
             context.bridgeUsername = undefined;

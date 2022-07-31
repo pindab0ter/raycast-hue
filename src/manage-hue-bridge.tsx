@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Alert, confirmAlert, Detail, popToRoot } from "@raycast/api";
+import { Action, ActionPanel, Alert, confirmAlert, Detail, Icon, popToRoot } from "@raycast/api";
 import { useMachine } from "@xstate/react";
 import { manageHueBridgeMachine } from "./hue/manageHueBridgeMachine";
 import ActionStyle = Alert.ActionStyle;
@@ -8,32 +8,32 @@ export default function Command() {
 
   console.log({ currentState: current.value });
 
-  const removeConfiguredBridge = async () => {
+  const unlinkSavedBridge = async () => {
     await confirmAlert({
-      title: "Are you sure you want to remove saved Hue Bridge?",
-      primaryAction: { title: "Remove", style: ActionStyle.Destructive, onAction: () => send("REMOVE") },
+      title: "Are you sure you want to unlink the configured Hue Bridge?",
+      primaryAction: { title: "Remove", style: ActionStyle.Destructive, onAction: () => send("UNLINK") },
     });
   };
 
   let contextActions: JSX.Element[] = [];
   switch (current.value) {
     case "linkWithBridge":
-      contextActions = [<Action title="Link With Bridge" onAction={() => send("LINK")} />];
+      contextActions = [<Action title="Link With Bridge" onAction={() => send("LINK")} icon={Icon.Plug} />];
       break;
     case "noBridgeFound":
     case "failedToLink":
-      contextActions = [<Action title="Retry" onAction={() => send("RETRY")} />];
+      contextActions = [<Action title="Retry" onAction={() => send("RETRY")} icon={Icon.Repeat} />];
       break;
     case "failedToConnect":
       contextActions = [
-        <Action title="Retry" onAction={() => send("RETRY")} />,
-        <Action title="Remove Saved Hue Bridge" onAction={removeConfiguredBridge} />,
+        <Action title="Retry" onAction={() => send("RETRY")} icon={Icon.Repeat}/>,
+        <Action title="Unlink Saved Hue Bridge" onAction={unlinkSavedBridge} icon={Icon.Trash} />,
       ];
       break;
     case "connected":
       contextActions = [
-        <Action title="Done" onAction={popToRoot} />,
-        <Action title="Remove Saved Hue Bridge" onAction={removeConfiguredBridge} />,
+        <Action title="Done" onAction={popToRoot} icon={Icon.Check} />,
+        <Action title="Unlink Saved Hue Bridge" onAction={unlinkSavedBridge} icon={Icon.Trash} />,
       ];
   }
 
