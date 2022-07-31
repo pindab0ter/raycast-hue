@@ -25,7 +25,7 @@ export interface HueContext {
 export const manageHueBridgeMachine = createMachine<HueContext>(
   {
     id: "manage-hue-bridge",
-    initial: "initial",
+    initial: "loadCredentialsFromLocalStorage",
     context: {
       bridgeIpAddress: undefined,
       bridgeUsername: undefined,
@@ -35,17 +35,22 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
       toast: new Toast({ style: Style.Animated, title: "" }),
     },
     states: {
-      initial: {
+      loadCredentialsFromLocalStorage: {
         invoke: {
-          id: "getBridgeIpAddress",
+          id: "getBridgeCredentials",
           src: async () => {
             const bridgeIpAddress = await LocalStorage.getItem<string>(BRIDGE_IP_ADDRESS_KEY);
+            const bridgeUsername = await LocalStorage.getItem<string>(BRIDGE_USERNAME_KEY);
             if (bridgeIpAddress === undefined) throw Error("No bridge IP address stored");
-            return bridgeIpAddress;
+            if (bridgeUsername === undefined) throw Error("No bridge IP username stored");
+            return { bridgeIpAddress, bridgeUsername };
           },
           onDone: {
-            target: "getBridgeUsername",
-            actions: assign({ bridgeIpAddress: (context, event) => event.data }),
+            target: "connecting",
+            actions: [
+              assign({ bridgeIpAddress: (context, event) => event.data.bridgeIpAddress }),
+              assign({ bridgeUsername: (context, event) => event.data.bridgeUsername }),
+            ],
           },
           onError: {
             target: "discovering",
@@ -53,14 +58,14 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
         },
       },
       discovering: {
-        entry: "discovering",
+        entry: "showDiscovering",
         exit: "hideToast",
         invoke: {
           id: "discoverBridge",
           src: discoverBridge,
           onDone: {
-            target: "getBridgeUsername",
             actions: assign({ bridgeIpAddress: (context, event) => event.data }),
+            target: "linkWithBridge",
           },
           onError: {
             target: "noBridgeFound",
@@ -68,32 +73,15 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
         },
       },
       noBridgeFound: {
-        entry: "displayNoBridgeFound",
+        entry: "showNoBridgeFound",
         on: {
           RETRY: {
             target: "discovering",
           },
         },
       },
-      getBridgeUsername: {
-        invoke: {
-          id: "getBridgeUsername",
-          src: async () => {
-            const bridgeIpAddress = await LocalStorage.getItem<string>(BRIDGE_USERNAME_KEY);
-            if (bridgeIpAddress === undefined) throw Error("No bridge IP username stored");
-            return bridgeIpAddress;
-          },
-          onDone: {
-            target: "connecting",
-            actions: assign({ bridgeUsername: (context, event) => event.data }),
-          },
-          onError: {
-            target: "linkWithBridge",
-          },
-        },
-      },
       linkWithBridge: {
-        entry: "displayLinkWithBridge",
+        entry: "showLinkWithBridge",
         on: {
           LINK: {
             target: "linking",
@@ -101,7 +89,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
         },
       },
       linking: {
-        entry: "linking",
+        entry: "showLinking",
         invoke: {
           id: "linking",
           src: async (context) => {
@@ -110,13 +98,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
           },
           onDone: {
             target: "connecting",
-            actions: async (context, event) => {
-              context.bridgeUsername = event.data;
-              if (context.bridgeIpAddress === undefined) throw Error("No bridge IP address");
-              if (context.bridgeUsername === undefined) throw Error("No bridge username");
-              LocalStorage.setItem(BRIDGE_IP_ADDRESS_KEY, context.bridgeIpAddress).then();
-              LocalStorage.setItem(BRIDGE_USERNAME_KEY, context.bridgeUsername).then();
-            },
+            actions: assign({ bridgeUsername: (context, event) => event.data }),
           },
           onError: {
             target: "failedToLink",
@@ -124,7 +106,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
         },
       },
       failedToLink: {
-        entry: "displayFailedToLink",
+        entry: "showFailedToLink",
         on: {
           RETRY: {
             target: "linking",
@@ -132,7 +114,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
         },
       },
       connecting: {
-        entry: "connecting",
+        entry: "showConnecting",
         exit: "hideToast",
         invoke: {
           id: "connectToBridge",
@@ -150,7 +132,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
         },
       },
       failedToConnect: {
-        entry: "displayFailedToConnect",
+        entry: "showFailedToConnect",
         on: {
           RETRY: {
             target: "connecting",
@@ -158,7 +140,16 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
         },
       },
       connected: {
-        entry: "displayConnected",
+        entry: "showConnected",
+        invoke: {
+          id: "saveCredentialsToLocalStorage",
+          src: async (context) => {
+            if (context.bridgeIpAddress === undefined) throw Error("No bridge IP address");
+            if (context.bridgeUsername === undefined) throw Error("No bridge username");
+            LocalStorage.setItem(BRIDGE_IP_ADDRESS_KEY, context.bridgeIpAddress).then();
+            LocalStorage.setItem(BRIDGE_USERNAME_KEY, context.bridgeUsername).then();
+          },
+        },
         on: {
           REMOVE: {
             target: "removing",
@@ -175,7 +166,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
             await LocalStorage.removeItem(BRIDGE_USERNAME_KEY);
           },
           onDone: {
-            target: "initial",
+            target: "discovering",
           },
         },
       },
@@ -183,50 +174,50 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
   },
   {
     actions: {
-      discovering: async (context) => {
+      showDiscovering: async (context) => {
         context.toast.style = Style.Animated;
         context.toast.title = "Discovering…";
         context.toast.show().then();
       },
-      linking: async (context) => {
+      showLinking: async (context) => {
         context.toast.style = Style.Animated;
-        context.toast.title = "Linking";
+        context.toast.title = "Linking…";
         context.toast.show().then();
       },
-      connecting: async (context) => {
+      showConnecting: async (context) => {
         context.toast.style = Style.Animated;
         context.toast.title = "Connecting…";
         context.toast.show().then();
       },
-      displayLinkWithBridge: (context) => {
+      showLinkWithBridge: (context) => {
         context.toast.style = Style.Success;
         context.toast.title = "Hue Bridge found";
         context.toast.show().then();
         context.shouldDisplay = true;
         context.markdown = linkWithBridgeMessage;
       },
-      displayNoBridgeFound: (context) => {
+      showNoBridgeFound: (context) => {
         context.toast.style = Style.Failure;
         context.toast.title = "No Hue Bridge found";
         context.toast.show().then();
         context.shouldDisplay = true;
         context.markdown = noBridgeFoundMessage;
       },
-      displayFailedToConnect: (context) => {
+      showFailedToConnect: (context) => {
         context.toast.style = Style.Failure;
         context.toast.title = "Failed to connect";
         context.toast.show().then();
         context.shouldDisplay = true;
         context.markdown = failedToConnectMessage;
       },
-      displayFailedToLink: (context) => {
+      showFailedToLink: (context) => {
         context.toast.style = Style.Failure;
         context.toast.title = "Failed to link";
         context.toast.show().then();
         context.shouldDisplay = true;
         context.markdown = failedToLinkMessage;
       },
-      displayConnected: (context) => {
+      showConnected: (context) => {
         context.toast.style = Style.Success;
         context.toast.title = "Connected";
         context.toast.show().then();
