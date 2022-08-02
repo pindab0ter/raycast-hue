@@ -1,5 +1,4 @@
 import { ActionPanel, Icon, List, showToast, ToastStyle } from "@raycast/api";
-import dotProp from "dot-prop";
 import useSWR, { SWRConfig } from "swr";
 import { BRIGHTNESSES } from "./lib/brightness";
 import { cacheConfig } from "./lib/cache";
@@ -18,6 +17,7 @@ import {
 } from "./lib/hue";
 import { Light } from "./lib/types";
 import { getAccessoryTitle, getIcon, getIconForColor } from "./lib/utils";
+import { getProperty } from "dot-prop";
 
 export default function Command() {
   return (
@@ -275,10 +275,10 @@ async function fetchLights(): Promise<Light[]> {
     id: light.id,
     name: light.name,
     state: {
-      on: dotProp.get(light, "state.on") ?? false,
-      brightness: dotProp.get(light, "state.bri") ?? 1,
-      xy: dotProp.get(light, "state.xy") ?? [0, 0],
-      reachable: dotProp.get(light, "state.reachable") ?? false,
+      on: getProperty(light, "state.on") ?? false,
+      brightness: getProperty(light, "state.bri") ?? 1,
+      xy: getProperty(light, "state.xy") ?? [0, 0],
+      reachable: getProperty(light, "state.reachable") ?? false,
     },
   }));
 }

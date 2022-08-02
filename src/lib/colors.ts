@@ -1,6 +1,6 @@
 import assert from "assert";
-import dotProp from "dot-prop";
 import { Light } from "./types";
+import { getProperty } from "dot-prop";
 
 export interface CssColor {
   name: string;
@@ -322,7 +322,7 @@ export class ColorConverter {
       return ranges.default;
     }
 
-    return dotProp.get(philipsModels, modelId, ranges.default);
+    return getProperty(philipsModels, modelId, ranges.default);
   }
 
   static rgbToXy(red: number, green: number, blue: number, modelId?: string) {
@@ -445,12 +445,12 @@ export class ColorConverter {
       // eslint-disable-next-line no-prototype-builtins
       if (distance.hasOwnProperty(i)) {
         if (!closestDistance) {
-          closestDistance = dotProp.get(distance, i);
+          closestDistance = getProperty(distance, i);
           closestColor = i;
         }
 
-        if (closestDistance && closestDistance > (dotProp.get(distance, i) as number)) {
-          closestDistance = dotProp.get(distance, i);
+        if (closestDistance && closestDistance > (getProperty(distance, i) as number)) {
+          closestDistance = getProperty(distance, i);
           closestColor = i;
         }
       }
@@ -458,7 +458,7 @@ export class ColorConverter {
 
     assert(closestColor, "Cannot find closest color");
 
-    return dotProp.get(closestColorPoints, closestColor) as XY;
+    return getProperty(closestColorPoints, closestColor) as XY;
   }
 
   static xyBriToRgb(x: number, y: number, bri: number) {
