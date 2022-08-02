@@ -1,7 +1,8 @@
 import { v3 } from "node-hue-api";
 import { Light } from "./types";
 import { convertToXY } from "./colors";
-import { getPreferenceValues } from "@raycast/api";
+import { getPreferenceValues, LocalStorage } from "@raycast/api";
+import { BRIDGE_IP_ADDRESS_KEY, BRIDGE_USERNAME_KEY } from "../hue";
 
 const BRIGHTNESS_STEP = 10;
 export const BRIGHTNESS_MAX = 254;
@@ -55,6 +56,12 @@ export async function setColor(light: Light, color: string) {
 }
 
 export async function createApi() {
-  const preferences = getPreferenceValues<{ ipAddress: string; username: string }>();
-  return await v3.api.createLocal(preferences.ipAddress).connect(preferences.username);
+  const ipAddress = await LocalStorage.getItem<string>(BRIDGE_IP_ADDRESS_KEY);
+  const username = await LocalStorage.getItem<string>(BRIDGE_USERNAME_KEY);
+
+  if (ipAddress === undefined || username === undefined) {
+    throw new Error("No Bridge configured");
+  }
+
+  return await v3.api.createLocal(ipAddress).connect(username);
 }
