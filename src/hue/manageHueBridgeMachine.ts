@@ -13,7 +13,7 @@ import {
   failedToLinkMessage,
   linkWithBridgeMessage,
   noBridgeFoundMessage,
-} from "../markdown";
+} from "../lib/markdown";
 import Style = Toast.Style;
 
 export interface HueContext {
