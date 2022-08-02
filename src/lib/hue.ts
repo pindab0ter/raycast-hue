@@ -12,12 +12,19 @@ const BRIGHTNESS_STEP = 10;
 export const BRIGHTNESS_MAX = 254;
 export const BRIGHTNESS_MIN = 1;
 
-export async function getUnauthenticatedApi(bridgeIpAddress: string): Promise<Api> {
-  return await v3.api.createLocal(bridgeIpAddress).connect();
-}
+let _api: Api;
 
-export async function getAuthenticatedApi(bridgeIpAddress: string, username: string): Promise<Api> {
-  return await v3.api.createLocal(bridgeIpAddress).connect(username);
+export async function getAuthenticatedApi(): Promise<Api> {
+  if (_api) return _api;
+
+  const bridgeIpAddress = await LocalStorage.getItem<string>(BRIDGE_IP_ADDRESS_KEY);
+  const bridgeUsername = await LocalStorage.getItem<string>(BRIDGE_USERNAME_KEY);
+
+  if (!bridgeIpAddress || !bridgeUsername) throw new Error("No Hue Bridge configured");
+
+  _api = await v3.api.createLocal(bridgeIpAddress).connect(bridgeUsername);
+
+  return _api;
 }
 
 /**
@@ -58,14 +65,15 @@ export async function discoverBridge(): Promise<string> {
 
 export async function linkWithBridge(ipAddress: string): Promise<string> {
   // Create an unauthenticated instance of the Hue API so that we can create a new user
-  const unauthenticatedApi = await getUnauthenticatedApi(ipAddress);
+  const unauthenticatedApi = await v3.api.createLocal(ipAddress).connect();
   const createdUser = await unauthenticatedApi.users.createUser(APP_NAME, "");
 
   return createdUser.username;
 }
 
 export async function turnOffAllLights() {
-  const api = await createApi();
+  // TODO: Replace with global singleton
+  const api = await getAuthenticatedApi();
 
   const lights = await api.lights.getAll();
   for await (const light of lights) {
@@ -74,12 +82,12 @@ export async function turnOffAllLights() {
 }
 
 export async function toggleLight(light: Light) {
-  const api = await createApi();
+  const api = await getAuthenticatedApi();
   await api.lights.setLightState(light.id, { on: !light.state.on });
 }
 
 export async function increaseBrightness(light: Light) {
-  const api = await createApi();
+  const api = await getAuthenticatedApi();
   const newLightState = new v3.model.lightStates.LightState().on().bri_inc(BRIGHTNESS_STEP);
   await api.lights.setLightState(light.id, newLightState);
 }
@@ -89,7 +97,7 @@ export function calcIncreasedBrightness(light: Light) {
 }
 
 export async function decreaseBrightness(light: Light) {
-  const api = await createApi();
+  const api = await getAuthenticatedApi();
   const newLightState = new v3.model.lightStates.LightState().on().bri_inc(-BRIGHTNESS_STEP);
   await api.lights.setLightState(light.id, newLightState);
 }
@@ -99,25 +107,14 @@ export function calcDecreasedBrightness(light: Light) {
 }
 
 export async function setBrightness(light: Light, percentage: number) {
-  const api = await createApi();
+  const api = await getAuthenticatedApi();
   const newLightState = new v3.model.lightStates.LightState().on().brightness(percentage);
   await api.lights.setLightState(light.id, newLightState);
 }
 
 export async function setColor(light: Light, color: string) {
-  const api = await createApi();
+  const api = await getAuthenticatedApi();
   const xy = convertToXY(color);
   const newLightState = new v3.model.lightStates.LightState().on().xy(xy);
   await api.lights.setLightState(light.id, newLightState);
-}
-
-export async function createApi() {
-  const ipAddress = await LocalStorage.getItem<string>(BRIDGE_IP_ADDRESS_KEY);
-  const username = await LocalStorage.getItem<string>(BRIDGE_USERNAME_KEY);
-
-  if (ipAddress === undefined || username === undefined) {
-    throw new Error("No Bridge configured");
-  }
-
-  return await v3.api.createLocal(ipAddress).connect(username);
 }

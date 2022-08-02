@@ -8,8 +8,8 @@ import {
   BRIGHTNESS_MIN,
   calcDecreasedBrightness,
   calcIncreasedBrightness,
-  createApi,
   decreaseBrightness,
+  getAuthenticatedApi,
   increaseBrightness,
   setBrightness,
   setColor,
@@ -270,7 +270,7 @@ function RefreshAction(props: { onRefresh: () => void }) {
 }
 
 async function fetchLights(): Promise<Light[]> {
-  const api = await createApi();
+  const api = await getAuthenticatedApi();
   const lights = await api.lights.getAll();
   return lights.map((light) => ({
     id: light.id,
