@@ -5,7 +5,7 @@ import {
   discoverBridge,
   getAuthenticatedApi,
   linkWithBridge,
-} from "./index";
+} from "./hue";
 import { LocalStorage, Toast } from "@raycast/api";
 import {
   connectedMessage,
@@ -13,7 +13,7 @@ import {
   failedToLinkMessage,
   linkWithBridgeMessage,
   noBridgeFoundMessage,
-} from "../lib/markdown";
+} from "./markdown";
 import Style = Toast.Style;
 
 export interface HueContext {

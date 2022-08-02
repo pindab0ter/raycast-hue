@@ -1,6 +1,6 @@
 import { Action, ActionPanel, Alert, confirmAlert, Detail, Icon, popToRoot } from "@raycast/api";
 import { useMachine } from "@xstate/react";
-import { manageHueBridgeMachine } from "./hue/manageHueBridgeMachine";
+import { manageHueBridgeMachine } from "./lib/manageHueBridgeMachine";
 import ActionStyle = Alert.ActionStyle;
 
 export default function Command() {
