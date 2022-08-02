@@ -31,8 +31,8 @@ export default function Command() {
 function LightList() {
   const { data, isValidating, mutate } = useLights();
 
-  // Ideally we can move all of that to a separate action, unfortunatley our current component tree doesn't work with SWR
-  // The actoin wouldn't be part of the SWRConfig and therefore mutates a different cache
+  // Ideally we can move all of that to a separate action, unfortunately our current component tree doesn't work with SWR
+  // The action wouldn't be part of the SWRConfig and therefore mutates a different cache
   async function handleToggle(index: number) {
     if (!data) {
       return;
@@ -54,7 +54,7 @@ function LightList() {
       toast.title = light.state.on ? "Turned light off" : "Turned light on";
     } catch (e) {
       toast.style = Style.Failure;
-      toast.title = light.state.on ? "Failed turning light off" : "Failed turning ligh on";
+      toast.title = light.state.on ? "Failed turning light off" : "Failed turning light on";
       toast.message = e instanceof Error ? e.message : undefined;
     }
   }
