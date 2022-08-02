@@ -1,18 +1,14 @@
 import { discovery, v3 } from "node-hue-api";
-import Api from "node-hue-api/lib/api/Api";
+import { Api } from "node-hue-api/dist/esm/api/Api";
 
 const APP_NAME = "raycast_hue_extension";
 
-export function getUnauthenticatedApi(bridgeIpAddress: string): Promise<Api> {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  return v3.api.createLocal(bridgeIpAddress).connect();
+export async function getUnauthenticatedApi(bridgeIpAddress: string): Promise<Api> {
+  return await v3.api.createLocal(bridgeIpAddress).connect();
 }
 
 export async function getAuthenticatedApi(bridgeIpAddress: string, username: string): Promise<Api> {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  return (await v3.api.createLocal(bridgeIpAddress).connect(username.username)) as Api;
+  return await v3.api.createLocal(bridgeIpAddress).connect(username);
 }
 
 /**
