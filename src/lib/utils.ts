@@ -1,6 +1,7 @@
-import { Color, ImageLike, showToast, ToastStyle } from "@raycast/api";
+import { Color, Image, ImageLike, showToast, Toast } from "@raycast/api";
 import { CssColor, getColor } from "./colors";
 import { Light } from "./types";
+import Style = Toast.Style;
 
 export async function showFailureToast<T>(
   error: T | Promise<T> | (() => T) | (() => Promise<T>),
@@ -18,10 +19,10 @@ export async function showFailureToast<T>(
       : String(resolvedError)
     : undefined;
 
-  await showToast(ToastStyle.Failure, title, message);
+  await showToast(Style.Failure, title, message);
 }
 
-export function getIcon(light: Light): ImageLike {
+export function getIcon(light: Light): Image {
   if (!light.state.reachable) {
     return { source: "light-disconnected.png", tintColor: Color.SecondaryText };
   }
@@ -38,10 +39,10 @@ export function getAccessoryTitle(light: Light) {
   return percentage.toLocaleString("en", { style: "percent" });
 }
 
-export function getAccessoryIcon(light: Light): ImageLike {
+export function getAccessoryIcon(light: Light): Image {
   return { source: "circle.png", tintColor: getColor(light) };
 }
 
-export function getIconForColor(color: CssColor): ImageLike {
+export function getIconForColor(color: CssColor): Image {
   return { source: "circle.png", tintColor: { light: color.value, dark: color.value, adjustContrast: false } };
 }

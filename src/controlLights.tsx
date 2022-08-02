@@ -1,5 +1,5 @@
-import { ActionPanel, Icon, List, showToast, ToastStyle } from "@raycast/api";
 import useSWR, { SWRConfig } from "swr";
+import { ActionPanel, Icon, List, showToast, Toast } from "@raycast/api";
 import { BRIGHTNESSES } from "./lib/brightness";
 import { cacheConfig } from "./lib/cache";
 import { COLORS, convertToXY, CssColor } from "./lib/colors";
@@ -18,6 +18,7 @@ import {
 import { Light } from "./lib/types";
 import { getAccessoryTitle, getIcon, getIconForColor } from "./lib/utils";
 import { getProperty } from "dot-prop";
+import Style = Toast.Style;
 
 export default function Command() {
   return (
@@ -38,7 +39,7 @@ function LightList() {
     }
 
     const light = data[index];
-    const toast = await showToast(ToastStyle.Animated, light.state.on ? "Turning light off" : "Turning light on");
+    const toast = await showToast(Style.Animated, light.state.on ? "Turning light off" : "Turning light on");
 
     try {
       const newLights = [...data];
@@ -49,10 +50,10 @@ function LightList() {
 
       mutate();
 
-      toast.style = ToastStyle.Success;
+      toast.style = Style.Success;
       toast.title = light.state.on ? "Turned light off" : "Turned light on";
     } catch (e) {
-      toast.style = ToastStyle.Failure;
+      toast.style = Style.Failure;
       toast.title = light.state.on ? "Failed turning light off" : "Failed turning ligh on";
       toast.message = e instanceof Error ? e.message : undefined;
     }
@@ -64,7 +65,7 @@ function LightList() {
     }
 
     const light = data[index];
-    const toast = await showToast(ToastStyle.Animated, "Increasing brightness");
+    const toast = await showToast(Style.Animated, "Increasing brightness");
 
     try {
       const newLights = [...data];
@@ -75,10 +76,10 @@ function LightList() {
 
       mutate();
 
-      toast.style = ToastStyle.Success;
+      toast.style = Style.Success;
       toast.title = "Increased brightness";
     } catch (e) {
-      toast.style = ToastStyle.Failure;
+      toast.style = Style.Failure;
       toast.title = "Failed increasing brightness";
       toast.message = e instanceof Error ? e.message : undefined;
     }
@@ -90,7 +91,7 @@ function LightList() {
     }
 
     const light = data[index];
-    const toast = await showToast(ToastStyle.Animated, "Decreasing brightness");
+    const toast = await showToast(Style.Animated, "Decreasing brightness");
 
     try {
       const newLights = [...data];
@@ -101,10 +102,10 @@ function LightList() {
 
       mutate();
 
-      toast.style = ToastStyle.Success;
+      toast.style = Style.Success;
       toast.title = "Decreased brightness";
     } catch (e) {
-      toast.style = ToastStyle.Failure;
+      toast.style = Style.Failure;
       toast.title = "Failed decreasing brightness";
       toast.message = e instanceof Error ? e.message : undefined;
     }
@@ -116,7 +117,7 @@ function LightList() {
     }
 
     const light = data[index];
-    const toast = await showToast(ToastStyle.Animated, "Setting brightness");
+    const toast = await showToast(Style.Animated, "Setting brightness");
 
     try {
       const newLights = [...data];
@@ -127,10 +128,10 @@ function LightList() {
 
       mutate();
 
-      toast.style = ToastStyle.Success;
+      toast.style = Style.Success;
       toast.title = `Set brightness to ${(percentage / 100).toLocaleString("en", { style: "percent" })}`;
     } catch (e) {
-      toast.style = ToastStyle.Failure;
+      toast.style = Style.Failure;
       toast.title = "Failed setting brightness";
       toast.message = e instanceof Error ? e.message : undefined;
     }
@@ -142,7 +143,7 @@ function LightList() {
     }
 
     const light = data[index];
-    const toast = await showToast(ToastStyle.Animated, "Setting color");
+    const toast = await showToast(Style.Animated, "Setting color");
 
     try {
       const newLights = [...data];
@@ -153,10 +154,10 @@ function LightList() {
 
       mutate();
 
-      toast.style = ToastStyle.Success;
+      toast.style = Style.Success;
       toast.title = `Set color to ${color.name}`;
     } catch (e) {
-      toast.style = ToastStyle.Failure;
+      toast.style = Style.Failure;
       toast.title = "Failed setting color";
       toast.message = e instanceof Error ? e.message : undefined;
     }
