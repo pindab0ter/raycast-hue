@@ -1,5 +1,11 @@
 import { assign, createMachine } from "xstate";
-import { discoverBridge, getAuthenticatedApi, linkWithBridge } from "./index";
+import {
+  BRIDGE_IP_ADDRESS_KEY,
+  BRIDGE_USERNAME_KEY,
+  discoverBridge,
+  getAuthenticatedApi,
+  linkWithBridge,
+} from "./index";
 import { LocalStorage, Toast } from "@raycast/api";
 import {
   connectedMessage,
@@ -9,9 +15,6 @@ import {
   noBridgeFoundMessage,
 } from "../markdown";
 import Style = Toast.Style;
-
-const BRIDGE_IP_ADDRESS_KEY = "bridgeIpAddress";
-const BRIDGE_USERNAME_KEY = "bridgeUsername";
 
 export interface HueContext {
   bridgeIpAddress?: string;

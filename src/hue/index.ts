@@ -2,6 +2,8 @@ import { discovery, v3 } from "node-hue-api";
 import { Api } from "node-hue-api/dist/esm/api/Api";
 
 const APP_NAME = "raycast_hue_extension";
+export const BRIDGE_IP_ADDRESS_KEY = "bridgeIpAddress";
+export const BRIDGE_USERNAME_KEY = "bridgeUsername";
 
 export async function getUnauthenticatedApi(bridgeIpAddress: string): Promise<Api> {
   return await v3.api.createLocal(bridgeIpAddress).connect();

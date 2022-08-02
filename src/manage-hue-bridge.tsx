@@ -26,7 +26,7 @@ export default function Command() {
       break;
     case "failedToConnect":
       contextActions = [
-        <Action title="Retry" onAction={() => send("RETRY")} icon={Icon.Repeat}/>,
+        <Action title="Retry" onAction={() => send("RETRY")} icon={Icon.Repeat} />,
         <Action title="Unlink Saved Hue Bridge" onAction={unlinkSavedBridge} icon={Icon.Trash} />,
       ];
       break;
