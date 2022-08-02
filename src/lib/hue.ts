@@ -8,7 +8,7 @@ const APP_NAME = "raycast_hue_extension";
 export const BRIDGE_IP_ADDRESS_KEY = "bridgeIpAddress";
 export const BRIDGE_USERNAME_KEY = "bridgeUsername";
 
-const BRIGHTNESS_STEP = 10;
+const BRIGHTNESS_STEP = 25.4;
 export const BRIGHTNESS_MAX = 254;
 export const BRIGHTNESS_MIN = 1;
 
