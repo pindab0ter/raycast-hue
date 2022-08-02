@@ -12,13 +12,31 @@
       "title": "Manage Hue Bridge",
       "description": "Set up or remove your Hue Bridge.",
       "mode": "view"
+    },
+    {
+      "name": "turnOffAllLights",
+      "title": "Turn Off All Lights",
+      "subtitle": "Hue",
+      "description": "Turn off all the lights",
+      "mode": "no-view"
+    },
+    {
+      "name": "controlLights",
+      "title": "Control Lights",
+      "subtitle": "Hue",
+      "description": "List, search and control lights",
+      "mode": "view"
     }
   ],
   "dependencies": {
     "@raycast/api": "^1.38.2",
     "@raycast/utils": "^1.0.7",
+    "@types/node-localstorage": "^1.3.0",
     "@xstate/react": "^3.0.0",
+    "dot-prop": "^7.2.0",
     "node-hue-api": "^5.0.0-beta.13",
+    "node-localstorage": "^2.2.1",
+    "swr": "^1.3.0",
     "xstate": "^4.32.1"
   },
   "devDependencies": {
