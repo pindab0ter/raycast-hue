@@ -1,7 +1,5 @@
-import useSWR, { SWRConfig } from "swr";
 import { ActionPanel, Icon, List, showToast, Toast } from "@raycast/api";
 import { BRIGHTNESSES } from "./lib/brightness";
-import { cacheConfig } from "./lib/cache";
 import { COLORS, convertToXY, CssColor } from "./lib/colors";
 import {
   BRIGHTNESS_MAX,
@@ -15,17 +13,73 @@ import {
   setColor,
   toggleLight,
 } from "./lib/hue";
-import { Light } from "./lib/types";
 import { getAccessoryTitle, getIcon, getIconForColor } from "./lib/utils";
 import { getProperty } from "dot-prop";
+import { useCachedState, usePromise } from "@raycast/utils";
+import { Light } from "@peter-murray/hue-bridge-model/dist/esm/model/Light";
+import { Group } from "@peter-murray/hue-bridge-model/dist/esm/model/groups/Group";
+import { Scene } from "@peter-murray/hue-bridge-model/dist/esm/model/scenes/Scene";
 import Style = Toast.Style;
 
+type HueState = {
+  lights: { [key: string]: Light };
+  groups: { [key: string]: Group };
+  scenes: { [key: string]: Scene };
+};
+
+function useHue() {
+  const [hueState, setHueState] = useCachedState<HueState>("hueState", { lights: {}, groups: {}, scenes: {} });
+
+  usePromise(async () => {
+    const api = await getAuthenticatedApi();
+    const configuration = await api.configuration.getAll();
+
+    setHueState((prevState) => {
+      return {
+        ...prevState,
+        lights: getProperty(configuration, "lights") ?? {},
+        groups: getProperty(configuration, "groups") ?? {},
+        scenes: getProperty(configuration, "scenes") ?? {},
+      };
+    });
+  });
+
+  return { hueState, setHueState };
+}
+
 export default function Command() {
-  return (
-    <SWRConfig value={cacheConfig}>
-      <LightList />
-    </SWRConfig>
-  );
+  const { hueState, setHueState } = useHue();
+
+  console.log(hueState);
+
+  const groupElements = Object.entries(hueState.groups)
+    .filter(([groupId, group]) => group.type == "Room")
+    .map(([groupId, group]) => {
+      const lightElements = Object.entries(hueState.lights)
+        .filter(([lightId]) => group.lights.includes(lightId))
+        .map(([lightId, light]) => {
+          return <List.Item key={lightId} title={getProperty(light, "name", "")} />;
+        });
+
+      return (
+        <List.Section key={groupId} title={getProperty(group, "name")}>
+          {lightElements}
+        </List.Section>
+      );
+    });
+
+  // Object.entries(lights).forEach(([id, light]) => {
+  //   console.log(id, light);
+  // });
+
+  // console.log(Object.entries(lights).length);
+  return <List>{groupElements}</List>;
+
+  // return (
+  //   <SWRConfig value={cacheConfig}>
+  //     <LightList />
+  //   </SWRConfig>
+  // );
 }
 
 function LightList() {
@@ -267,23 +321,4 @@ function RefreshAction(props: { onRefresh: () => void }) {
       onAction={props.onRefresh}
     />
   );
-}
-
-async function fetchLights(): Promise<Light[]> {
-  const api = await getAuthenticatedApi();
-  const lights = await api.lights.getAll();
-  return lights.map((light) => ({
-    id: light.id,
-    name: light.name,
-    state: {
-      on: getProperty(light, "state.on") ?? false,
-      brightness: getProperty(light, "state.bri") ?? 1,
-      xy: getProperty(light, "state.xy") ?? [0, 0],
-      reachable: getProperty(light, "state.reachable") ?? false,
-    },
-  }));
-}
-
-function useLights() {
-  return useSWR("lights", fetchLights);
 }
