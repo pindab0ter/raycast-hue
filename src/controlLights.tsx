@@ -7,77 +7,47 @@ import {
   calcDecreasedBrightness,
   calcIncreasedBrightness,
   decreaseBrightness,
-  getAuthenticatedApi,
   increaseBrightness,
   setBrightness,
   setColor,
-  toggleLight,
+  toggleLight, useHue
 } from "./lib/hue";
-import { getAccessoryTitle, getIcon, getIconForColor, getLightIcon } from "./lib/utils";
-import { getProperty } from "dot-prop";
-import { useCachedState, usePromise } from "@raycast/utils";
+import { getIcon, getIconForColor, getLightIcon } from "./lib/utils";
 import { Light } from "@peter-murray/hue-bridge-model/dist/esm/model/Light";
-import { Group } from "@peter-murray/hue-bridge-model/dist/esm/model/groups/Group";
-import { Scene } from "@peter-murray/hue-bridge-model/dist/esm/model/scenes/Scene";
+import { mutate } from "swr";
 import Style = Toast.Style;
 
-type HueState = {
-  lights: { [key: string]: Light };
-  groups: { [key: string]: Group };
-  scenes: { [key: string]: Scene };
-};
-
-function useHue() {
-  const [hueState, setHueState] = useCachedState<HueState>("hueState", { lights: {}, groups: {}, scenes: {} });
-
-  usePromise(async () => {
-    const api = await getAuthenticatedApi();
-    const configuration = await api.configuration.getAll();
-    const groups = await api.groups.getAll();
-
-    setHueState((prevState) => {
-      return {
-        ...prevState,
-        lights: getProperty(configuration, "lights") ?? {},
-        groups: getProperty(configuration, "groups") ?? {},
-        scenes: getProperty(configuration, "scenes") ?? {},
-      };
-    });
-  });
-
-  return { hueState, setHueState };
-}
-
 export default function Command() {
-  const { hueState, setHueState } = useHue();
+  const { hueState } = useHue();
+  const rooms = Object.entries(hueState.groups).filter(([, group]) => group.type == "Room");
 
-  const groupElements = Object.entries(hueState.groups)
-    .filter(([groupId, group]) => group.type == "Room")
-    .map(([groupId, group]) => {
-      const lightElements = Object.entries(hueState.lights)
-        .filter(([lightId]) => group.lights.includes(lightId))
-        .map(([lightId, light]) => {
-          return <List.Item
-            key={lightId}
-            title={getProperty(light, "name") ?? ""}
-            icon={getLightIcon(light)}
-          />;
-        });
+  function Room(props: { groupId: string }) {
+    const group = hueState.groups[props.groupId];
+    const lights = Object.entries(hueState.lights).filter(([lightId]) => group.lights.includes(lightId));
 
-      return (
-        <List.Section key={groupId} title={getProperty(group, "name")}>
-          {lightElements}
-        </List.Section>
-      );
-    });
+    return (
+      <List.Section key={props.groupId} title={group.name}>
+        {lights.map(([lightId]) => (
+          <Light lightId={lightId} />
+        ))}
+      </List.Section>
+    );
+  }
 
-  return <List>{groupElements}</List>;
+  function Light(props: { lightId: string }) {
+    const light = hueState.lights[props.lightId];
 
-  // return (
-  //   <SWRConfig value={cacheConfig}>
-  //     <LightList />
-  //   </SWRConfig>
-  // );
+    return <List.Item key={props.lightId} title={light.name} icon={getLightIcon(light)} />;
+  }
+
+  // TODO: Figure out why this causes 'unique "key" prop' warnings.
+  return (
+    <List>
+      {rooms.map(([groupId]) => (
+        <Room groupId={groupId} />
+      ))}
+    </List>
+  );
 }
 
 function LightList() {
