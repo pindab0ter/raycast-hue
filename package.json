@@ -8,7 +8,7 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "manage-hue-bridge",
+      "name": "manageHueBridge",
       "title": "Manage Hue Bridge",
       "description": "Set up or remove your Hue Bridge.",
       "mode": "view"
