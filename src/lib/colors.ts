@@ -144,12 +144,12 @@ export const COLORS: CssColor[] = [
 ];
 
 export function convertToXY(color: string) {
-  const [red, green, blue] = hexToRGB(color);
+  const [red, green, blue] = hexToRgb(color);
   return rgbToXy(red, green, blue);
 }
 
-export function getColor(light: Light) {
-  return cieToRgb(light.state.xy[0], light.state.xy[1], light.state.brightness);
+export function getHexFrom(light: Light) {
+  return cieToHex(light.state.xy[0], light.state.xy[1], light.state.brightness);
 }
 
 function hexToRGB(hex: string) {
@@ -162,7 +162,7 @@ function hexToRGB(hex: string) {
 // - Source: https://github.com/diyhue/diyHue/blob/1bbc4468069017356bda48321e1b77211361980e/BridgeEmulator/web-ui-src/src/color.js
 // - Probably copied from somewhere else
 // - Converted to TypeScript
-function cieToRgb(x: number, y: number, brightness: number) {
+function cieToHex(x: number, y: number, brightness: number) {
   //Set to maximum brightness if no custom value was given (Not the slick ECMAScript 6 way for compatibility reasons)
   if (brightness === undefined) {
     brightness = 254;
@@ -216,7 +216,7 @@ function cieToRgb(x: number, y: number, brightness: number) {
   }
 
   const decColor = 0x1000000 + blue + 0x100 * green + 0x10000 * red;
-  return "#" + decColor.toString(16).substr(1);
+  return "#" + decColor.toString(16).slice(1);
 }
 
 function rgbToXy(red: number, green: number, blue: number): [number, number] {

@@ -13,7 +13,7 @@ import {
   setColor,
   toggleLight,
 } from "./lib/hue";
-import { getAccessoryTitle, getIcon, getIconForColor } from "./lib/utils";
+import { getAccessoryTitle, getIcon, getIconForColor, getLightIcon } from "./lib/utils";
 import { getProperty } from "dot-prop";
 import { useCachedState, usePromise } from "@raycast/utils";
 import { Light } from "@peter-murray/hue-bridge-model/dist/esm/model/Light";
@@ -33,6 +33,7 @@ function useHue() {
   usePromise(async () => {
     const api = await getAuthenticatedApi();
     const configuration = await api.configuration.getAll();
+    const groups = await api.groups.getAll();
 
     setHueState((prevState) => {
       return {
@@ -50,15 +51,17 @@ function useHue() {
 export default function Command() {
   const { hueState, setHueState } = useHue();
 
-  console.log(hueState);
-
   const groupElements = Object.entries(hueState.groups)
     .filter(([groupId, group]) => group.type == "Room")
     .map(([groupId, group]) => {
       const lightElements = Object.entries(hueState.lights)
         .filter(([lightId]) => group.lights.includes(lightId))
         .map(([lightId, light]) => {
-          return <List.Item key={lightId} title={getProperty(light, "name", "")} />;
+          return <List.Item
+            key={lightId}
+            title={getProperty(light, "name") ?? ""}
+            icon={getLightIcon(light)}
+          />;
         });
 
       return (
@@ -68,11 +71,6 @@ export default function Command() {
       );
     });
 
-  // Object.entries(lights).forEach(([id, light]) => {
-  //   console.log(id, light);
-  // });
-
-  // console.log(Object.entries(lights).length);
   return <List>{groupElements}</List>;
 
   // return (
@@ -83,7 +81,7 @@ export default function Command() {
 }
 
 function LightList() {
-  const { data, isValidating, mutate } = useLights();
+  // const { data, isValidating, mutate } = useLights();
 
   // Ideally we can move all of that to a separate action, unfortunately our current component tree doesn't work with SWR
   // The action wouldn't be part of the SWRConfig and therefore mutates a different cache

@@ -6,8 +6,6 @@ import ActionStyle = Alert.ActionStyle;
 export default function Command() {
   const [current, send] = useMachine(manageHueBridgeMachine);
 
-  console.log({ currentState: current.value });
-
   const unlinkSavedBridge = async () => {
     await confirmAlert({
       title: "Are you sure you want to unlink the configured Hue Bridge?",
