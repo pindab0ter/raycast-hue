@@ -16,52 +16,55 @@ import {
 import { getIcon, getIconForColor, getLightIcon } from "./lib/utils";
 import { Light } from "@peter-murray/hue-bridge-model/dist/esm/model/Light";
 import { mutate } from "swr";
-import { setProperty } from "dot-prop";
+import { model } from "@peter-murray/hue-bridge-model";
+import LightGroup from "node-hue-api/lib/model/groups/LightGroup";
 import Style = Toast.Style;
 
 export default function Command() {
   const { hueState, setHueState, revalidate } = useHue();
-  const rooms = Object.entries(hueState.groups).filter(([, group]) => group.type == "Room");
+  const rooms = hueState.groups.filter((group) => group.type == "Room") as unknown as LightGroup[];
 
-  function Room({ groupId }: { groupId: string }) {
-    const group = hueState.groups[groupId];
-    const lights = Object.entries(hueState.lights).filter(([lightId]) => group.lights.includes(lightId));
+  function Room({ room }: { room: model.LightGroup }) {
+    const roomLights = hueState.lights.filter((light: model.Light) => {
+      return room.lights.includes(`${light.id}`);
+    });
 
     return (
-      <List.Section key={groupId} title={group.name}>
-        {lights.map(([lightId]) => (
-          <Light lightId={lightId} />
+      <List.Section key={room.id} title={room.name}>
+        {roomLights.map((light) => (
+          <Light light={light} />
         ))}
       </List.Section>
     );
   }
 
-  function Light({ lightId }: { lightId: string }) {
-    const light = hueState.lights[lightId];
-
+  function Light({ light }: { light: model.Light }) {
     return (
       <List.Item
-        key={lightId}
+        key={light.id}
         title={light.name}
         icon={getLightIcon(light)}
         actions={
           <ActionPanel>
-            <ToggleLightAction light={light} onToggle={() => handleToggle(lightId)} />
+            <ToggleLightAction light={light} onToggle={() => handleToggle(light)} />
           </ActionPanel>
         }
       />
     );
   }
 
-  async function handleToggle(lightId: string) {
-    const light = hueState.lights[lightId];
+  async function handleToggle(light: Light) {
     const toast = await showToast(Style.Animated, light.state.on ? "Turning light off" : "Turning light on");
 
     try {
-      await toggleLight(lightId, light);
+      // TODO: Fix crawl up when toggling
+      const newLights = [...hueState.lights];
+      newLights[newLights.indexOf(light)] = { ...light, state: { ...light.state, on: !light.state.on } };
       setHueState((hueState) => {
-        return setProperty(hueState, `lights.${lightId}.state.on`, !light.state.on);
+        return { ...hueState, lights: newLights };
       });
+
+      await toggleLight(light);
 
       revalidate();
 
@@ -77,8 +80,8 @@ export default function Command() {
   // TODO: Figure out why this causes 'unique "key" prop' warnings.
   return (
     <List>
-      {rooms.map(([groupId]) => (
-        <Room groupId={groupId} />
+      {rooms.map((group) => (
+        <Room room={group} />
       ))}
     </List>
   );

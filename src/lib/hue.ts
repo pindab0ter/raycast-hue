@@ -3,9 +3,7 @@ import { Api } from "node-hue-api/dist/esm/api/Api";
 import { convertToXY } from "./colors";
 import { LocalStorage } from "@raycast/api";
 import { useCachedState, usePromise } from "@raycast/utils";
-import { getProperty } from "dot-prop";
-import { Group } from "@peter-murray/hue-bridge-model/dist/esm/model/groups/Group";
-import { Scene } from "@peter-murray/hue-bridge-model/dist/esm/model/scenes/Scene";
+import { model } from "@peter-murray/hue-bridge-model";
 import { Light } from "@peter-murray/hue-bridge-model/dist/esm/model/Light";
 
 const APP_NAME = "raycast_hue_extension";
@@ -20,26 +18,25 @@ let _api: Api;
 
 // TODO: Move from objects to arrays
 type HueState = {
-  lights: { [key: string]: Light };
-  groups: { [key: string]: Group };
-  scenes: { [key: string]: Scene };
+  lights: model.Light[];
+  groups: model.Group[];
+  scenes: model.Scene[];
 };
 
 export function useHue() {
-  const [hueState, setHueState] = useCachedState<HueState>("hueState", { lights: {}, groups: {}, scenes: {} });
+  const [hueState, setHueState] = useCachedState<HueState>("hueState", { lights: [], groups: [], scenes: [] });
 
   const { revalidate } = usePromise(async () => {
     const api = await getAuthenticatedApi();
-    const configuration = await api.configuration.getAll();
+    const lights = await api.lights.getAll();
+    const groups = await api.groups.getAll();
+    const scenes = await api.scenes.getAll();
 
-    setHueState((prevState) => {
-      return {
-        ...prevState,
-        lights: getProperty(configuration, "lights") ?? {},
-        groups: getProperty(configuration, "groups") ?? {},
-        scenes: getProperty(configuration, "scenes") ?? {},
-      };
-    });
+    setHueState(() => ({
+      lights: lights.map((light) => light["data"] as model.Light).filter((light) => light != null),
+      groups: groups.map((group) => group["data"] as model.Group).filter((group) => group != null),
+      scenes,
+    }));
   });
 
   return { hueState, setHueState, revalidate };
@@ -111,10 +108,9 @@ export async function turnOffAllLights() {
   }
 }
 
-export async function toggleLight(lightId: string, light: Light) {
-  console.log({ lightId, light });
+export async function toggleLight(light: Light) {
   const api = await getAuthenticatedApi();
-  await api.lights.setLightState(lightId, { on: !light.state.on });
+  await api.lights.setLightState(light.id, { on: !light.state.on });
 }
 
 export async function increaseBrightness(light: Light) {
