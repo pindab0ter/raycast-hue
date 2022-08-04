@@ -10,23 +10,25 @@ import {
   increaseBrightness,
   setBrightness,
   setColor,
-  toggleLight, useHue
+  toggleLight,
+  useHue,
 } from "./lib/hue";
 import { getIcon, getIconForColor, getLightIcon } from "./lib/utils";
 import { Light } from "@peter-murray/hue-bridge-model/dist/esm/model/Light";
 import { mutate } from "swr";
+import { setProperty } from "dot-prop";
 import Style = Toast.Style;
 
 export default function Command() {
-  const { hueState } = useHue();
+  const { hueState, setHueState, revalidate } = useHue();
   const rooms = Object.entries(hueState.groups).filter(([, group]) => group.type == "Room");
 
-  function Room(props: { groupId: string }) {
-    const group = hueState.groups[props.groupId];
+  function Room({ groupId }: { groupId: string }) {
+    const group = hueState.groups[groupId];
     const lights = Object.entries(hueState.lights).filter(([lightId]) => group.lights.includes(lightId));
 
     return (
-      <List.Section key={props.groupId} title={group.name}>
+      <List.Section key={groupId} title={group.name}>
         {lights.map(([lightId]) => (
           <Light lightId={lightId} />
         ))}
@@ -34,10 +36,42 @@ export default function Command() {
     );
   }
 
-  function Light(props: { lightId: string }) {
-    const light = hueState.lights[props.lightId];
+  function Light({ lightId }: { lightId: string }) {
+    const light = hueState.lights[lightId];
 
-    return <List.Item key={props.lightId} title={light.name} icon={getLightIcon(light)} />;
+    return (
+      <List.Item
+        key={lightId}
+        title={light.name}
+        icon={getLightIcon(light)}
+        actions={
+          <ActionPanel>
+            <ToggleLightAction light={light} onToggle={() => handleToggle(lightId)} />
+          </ActionPanel>
+        }
+      />
+    );
+  }
+
+  async function handleToggle(lightId: string) {
+    const light = hueState.lights[lightId];
+    const toast = await showToast(Style.Animated, light.state.on ? "Turning light off" : "Turning light on");
+
+    try {
+      await toggleLight(lightId, light);
+      setHueState((hueState) => {
+        return setProperty(hueState, `lights.${lightId}.state.on`, !light.state.on);
+      });
+
+      revalidate();
+
+      toast.style = Style.Success;
+      toast.title = light.state.on ? "Turned light off" : "Turned light on";
+    } catch (e) {
+      toast.style = Style.Failure;
+      toast.title = light.state.on ? "Failed turning light off" : "Failed turning light on";
+      toast.message = e instanceof Error ? e.message : undefined;
+    }
   }
 
   // TODO: Figure out why this causes 'unique "key" prop' warnings.
@@ -55,31 +89,6 @@ function LightList() {
 
   // Ideally we can move all of that to a separate action, unfortunately our current component tree doesn't work with SWR
   // The action wouldn't be part of the SWRConfig and therefore mutates a different cache
-  async function handleToggle(index: number) {
-    if (!data) {
-      return;
-    }
-
-    const light = data[index];
-    const toast = await showToast(Style.Animated, light.state.on ? "Turning light off" : "Turning light on");
-
-    try {
-      const newLights = [...data];
-      newLights[index] = { ...light, state: { ...light.state, on: !light.state.on } };
-      mutate(newLights, false);
-
-      await toggleLight(light);
-
-      mutate();
-
-      toast.style = Style.Success;
-      toast.title = light.state.on ? "Turned light off" : "Turned light on";
-    } catch (e) {
-      toast.style = Style.Failure;
-      toast.title = light.state.on ? "Failed turning light off" : "Failed turning light on";
-      toast.message = e instanceof Error ? e.message : undefined;
-    }
-  }
 
   async function handleIncreaseBrightness(index: number) {
     if (!data) {
@@ -215,12 +224,12 @@ function LightList() {
   );
 }
 
-function ToggleLightAction(props: { light: Light; onToggle?: () => void }) {
+function ToggleLightAction({ light, onToggle }: { light: Light; onToggle?: () => void }) {
   return (
     <ActionPanel.Item
-      title={props.light.state.on ? "Turn Off" : "Turn On"}
-      icon={props.light.state.on ? "light-off.png" : "light-on.png"}
-      onAction={props.onToggle}
+      title={light.state.on ? "Turn Off" : "Turn On"}
+      icon={light.state.on ? "light-off.png" : "light-on.png"}
+      onAction={onToggle}
     />
   );
 }

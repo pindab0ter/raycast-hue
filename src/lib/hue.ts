@@ -18,6 +18,7 @@ export const BRIGHTNESS_MIN = 1;
 
 let _api: Api;
 
+// TODO: Move from objects to arrays
 type HueState = {
   lights: { [key: string]: Light };
   groups: { [key: string]: Group };
@@ -27,7 +28,7 @@ type HueState = {
 export function useHue() {
   const [hueState, setHueState] = useCachedState<HueState>("hueState", { lights: {}, groups: {}, scenes: {} });
 
-  usePromise(async () => {
+  const { revalidate } = usePromise(async () => {
     const api = await getAuthenticatedApi();
     const configuration = await api.configuration.getAll();
 
@@ -41,7 +42,7 @@ export function useHue() {
     });
   });
 
-  return { hueState, setHueState };
+  return { hueState, setHueState, revalidate };
 }
 
 export async function getAuthenticatedApi(): Promise<Api> {
@@ -110,9 +111,10 @@ export async function turnOffAllLights() {
   }
 }
 
-export async function toggleLight(light: Light) {
+export async function toggleLight(lightId: string, light: Light) {
+  console.log({ lightId, light });
   const api = await getAuthenticatedApi();
-  await api.lights.setLightState(light.id, { on: !light.state.on });
+  await api.lights.setLightState(lightId, { on: !light.state.on });
 }
 
 export async function increaseBrightness(light: Light) {
