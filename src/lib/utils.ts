@@ -36,7 +36,7 @@ export function getIcon(light: Light): Image {
 }
 
 export function getLightIcon(light: Light) {
-  const progress = light.state.bri / 254;
+  const progress = light.state.on ? (light.state.bri - 1) / 253 : 0;
 
   if (light.state.colormode === "xy") {
     const color = getHexFrom(light);
