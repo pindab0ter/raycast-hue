@@ -1,4 +1,4 @@
-import { ActionPanel, Icon, List, showToast, Toast } from "@raycast/api";
+import { ActionPanel, Icon, List, Toast } from "@raycast/api";
 import { COLORS, convertToXY, CssColor } from "./lib/colors";
 import {
   BRIGHTNESS_MAX,
@@ -27,7 +27,7 @@ import Style = Toast.Style;
 export default function Command() {
   const { isLoading, lights, mutateLights, groups } = useHue();
 
-  const rooms = groups.filter((group) => group.type == "Room") as unknown as Room[];
+  const rooms = groups.filter((group) => group.type == "Room") as Room[];
 
   return (
     <List isLoading={isLoading}>
@@ -208,7 +208,7 @@ function RefreshAction(props: { onRefresh: () => void }) {
 }
 
 async function handleToggle(light: Light, mutateHueState: MutatePromise<Light[]>) {
-  const toast = await showToast(Style.Animated, light.state.on ? "Turning light off" : "Turning light on");
+  const toast = new Toast({ title: "" });
 
   try {
     await mutateHueState(toggleLight(light), {
@@ -219,15 +219,17 @@ async function handleToggle(light: Light, mutateHueState: MutatePromise<Light[]>
 
     toast.style = Style.Success;
     toast.title = light.state.on ? "Turned light off" : "Turned light on";
+    await toast.show();
   } catch (e) {
     toast.style = Style.Failure;
     toast.title = light.state.on ? "Failed turning light off" : "Failed turning light on";
     toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
   }
 }
 
 async function handleSetBrightness(light: Light, mutateHueState: MutatePromise<Light[]>, percentage: number) {
-  const toast = await showToast(Style.Animated, "Setting brightness");
+  const toast = new Toast({ title: "" });
   const brightness = (percentage / 100) * 253 + 1;
 
   try {
@@ -239,15 +241,17 @@ async function handleSetBrightness(light: Light, mutateHueState: MutatePromise<L
 
     toast.style = Style.Success;
     toast.title = `Set brightness to ${(percentage / 100).toLocaleString("en", { style: "percent" })}`;
+    await toast.show();
   } catch (e) {
     toast.style = Style.Failure;
     toast.title = "Failed setting brightness";
     toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
   }
 }
 
 async function handleIncreaseBrightness(light: Light, mutateHueState: MutatePromise<Light[]>) {
-  const toast = await showToast(Style.Animated, "Increasing brightness");
+  const toast = new Toast({ title: "" });
 
   try {
     await mutateHueState(increaseBrightness(light), {
@@ -260,15 +264,17 @@ async function handleIncreaseBrightness(light: Light, mutateHueState: MutateProm
 
     toast.style = Style.Success;
     toast.title = "Increased brightness";
+    await toast.show();
   } catch (e) {
     toast.style = Style.Failure;
     toast.title = "Failed increasing brightness";
     toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
   }
 }
 
 async function handleDecreaseBrightness(light: Light, mutateHueState: MutatePromise<Light[]>) {
-  const toast = await showToast(Style.Animated, "Increasing brightness");
+  const toast = new Toast({ title: "" });
 
   try {
     await mutateHueState(decreaseBrightness(light), {
@@ -281,15 +287,17 @@ async function handleDecreaseBrightness(light: Light, mutateHueState: MutateProm
 
     toast.style = Style.Success;
     toast.title = "Decreased brightness";
+    await toast.show();
   } catch (e) {
     toast.style = Style.Failure;
     toast.title = "Failed decreasing brightness";
     toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
   }
 }
 
 async function handleSetColor(light: Light, mutateHueState: MutatePromise<Light[]>, color: CssColor) {
-  const toast = await showToast(Style.Animated, "Setting color");
+  const toast = new Toast({ title: "" });
 
   try {
     await mutateHueState(setColor(light, color.value), {
@@ -302,15 +310,17 @@ async function handleSetColor(light: Light, mutateHueState: MutatePromise<Light[
 
     toast.style = Style.Success;
     toast.title = `Set color to ${color.name}`;
+    await toast.show();
   } catch (e) {
     toast.style = Style.Failure;
     toast.title = "Failed setting color";
     toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
   }
 }
 
 async function handleIncreaseColorTemperature(light: Light, mutateHueState: MutatePromise<Light[]>) {
-  const toast = await showToast(Style.Animated, "Increasing color temperature");
+  const toast = new Toast({ title: "" });
 
   try {
     await mutateHueState(increaseColorTemperature(light), {
@@ -323,15 +333,17 @@ async function handleIncreaseColorTemperature(light: Light, mutateHueState: Muta
 
     toast.style = Style.Success;
     toast.title = "Increased color temperature";
+    await toast.show();
   } catch (e) {
     toast.style = Style.Failure;
     toast.title = "Failed increasing color temperature";
     toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
   }
 }
 
 async function handleDecreaseColorTemperature(light: Light, mutateHueState: MutatePromise<Light[]>) {
-  const toast = await showToast(Style.Animated, "Increasing color temperature");
+  const toast = new Toast({ title: "" });
 
   try {
     await mutateHueState(decreaseColorTemperature(light), {
@@ -344,9 +356,11 @@ async function handleDecreaseColorTemperature(light: Light, mutateHueState: Muta
 
     toast.style = Style.Success;
     toast.title = "Decreased color temperature";
+    await toast.show();
   } catch (e) {
     toast.style = Style.Failure;
     toast.title = "Failed decreasing color temperature";
     toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
   }
 }
