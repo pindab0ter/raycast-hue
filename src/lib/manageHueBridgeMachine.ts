@@ -1,11 +1,5 @@
 import { assign, createMachine } from "xstate";
-import {
-  BRIDGE_IP_ADDRESS_KEY,
-  BRIDGE_USERNAME_KEY,
-  discoverBridge,
-  getAuthenticatedApi,
-  linkWithBridge,
-} from "./index";
+import { BRIDGE_IP_ADDRESS_KEY, BRIDGE_USERNAME_KEY, discoverBridge, linkWithBridge } from "./hue";
 import { LocalStorage, Toast } from "@raycast/api";
 import {
   connectedMessage,
@@ -13,7 +7,8 @@ import {
   failedToLinkMessage,
   linkWithBridgeMessage,
   noBridgeFoundMessage,
-} from "../markdown";
+} from "./markdown";
+import { v3 } from "node-hue-api";
 import Style = Toast.Style;
 
 export interface HueContext {
@@ -127,7 +122,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
           src: async (context) => {
             if (context.bridgeIpAddress === undefined) throw Error("No bridge IP address");
             if (context.bridgeUsername === undefined) throw Error("No bridge username");
-            await getAuthenticatedApi(context.bridgeIpAddress, context.bridgeUsername);
+            await v3.api.createLocal(context.bridgeIpAddress).connect(context.bridgeUsername);
           },
           onDone: {
             target: "connected",
