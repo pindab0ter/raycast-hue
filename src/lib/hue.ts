@@ -2,7 +2,7 @@ import { discovery, v3 } from "node-hue-api";
 import { Api } from "node-hue-api/dist/esm/api/Api";
 import { convertToXY } from "./colors";
 import { LocalStorage } from "@raycast/api";
-import { useCachedState, usePromise } from "@raycast/utils";
+import { useCachedPromise } from "@raycast/utils";
 import { model } from "@peter-murray/hue-bridge-model";
 import { Light } from "@peter-murray/hue-bridge-model/dist/esm/model/Light";
 
@@ -23,24 +23,25 @@ type HueState = {
   scenes: model.Scene[];
 };
 
-export function useHue() {
-  const [hueState, setHueState] = useCachedState<HueState>("hueState", { lights: [], groups: [], scenes: [] });
-
-  const { revalidate } = usePromise(async () => {
+export const useHue = () => useCachedPromise<() => Promise<HueState>>(
+  async () => {
     const api = await getAuthenticatedApi();
     const lights = await api.lights.getAll();
     const groups = await api.groups.getAll();
     const scenes = await api.scenes.getAll();
 
-    setHueState(() => ({
+    return {
       lights: lights.map((light) => light["data"] as model.Light).filter((light) => light != null),
       groups: groups.map((group) => group["data"] as model.Group).filter((group) => group != null),
-      scenes,
-    }));
-  });
-
-  return { hueState, setHueState, revalidate };
-}
+      scenes: scenes.map((scene) => scene["data"] as model.Scene).filter((scene) => scene != null),
+    };
+  },
+  [],
+  {
+    keepPreviousData: true,
+    initialData: { lights: [], groups: [], scenes: [] },
+  }
+);
 
 export async function getAuthenticatedApi(): Promise<Api> {
   if (_api) return _api;

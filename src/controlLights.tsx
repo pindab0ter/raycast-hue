@@ -21,11 +21,12 @@ import LightGroup from "node-hue-api/lib/model/groups/LightGroup";
 import Style = Toast.Style;
 
 export default function Command() {
-  const { hueState, setHueState, revalidate } = useHue();
-  const rooms = hueState.groups.filter((group) => group.type == "Room") as unknown as LightGroup[];
+  const { isLoading, data, mutate, revalidate } = useHue();
+
+  const rooms = data.groups.filter((group) => group.type == "Room") as unknown as LightGroup[];
 
   function Room({ room }: { room: model.LightGroup }) {
-    const roomLights = hueState.lights.filter((light: model.Light) => {
+    const roomLights = data.lights.filter((light: model.Light) => {
       return room.lights.includes(`${light.id}`);
     });
 
@@ -58,11 +59,11 @@ export default function Command() {
 
     try {
       // TODO: Fix crawl up when toggling
-      const newLights = [...hueState.lights];
+      const newLights = [...data.lights];
       newLights[newLights.indexOf(light)] = { ...light, state: { ...light.state, on: !light.state.on } };
-      setHueState((hueState) => {
-        return { ...hueState, lights: newLights };
-      });
+      await mutate({ ...data, lights: newLights });
+
+      mutate()
 
       await toggleLight(light);
 
@@ -79,7 +80,7 @@ export default function Command() {
 
   // TODO: Figure out why this causes 'unique "key" prop' warnings.
   return (
-    <List>
+    <List isLoading={isLoading}>
       {rooms.map((group) => (
         <Room room={group} />
       ))}
