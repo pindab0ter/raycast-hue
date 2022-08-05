@@ -1,9 +1,9 @@
 import { ActionPanel, Icon, List, showToast, Toast } from "@raycast/api";
-import { BRIGHTNESSES } from "./lib/brightness";
 import { COLORS, convertToXY, CssColor } from "./lib/colors";
 import {
   BRIGHTNESS_MAX,
   BRIGHTNESS_MIN,
+  BRIGHTNESSES,
   calcDecreasedBrightness,
   calcIncreasedBrightness,
   decreaseBrightness,
@@ -13,8 +13,7 @@ import {
   toggleLight,
   useHue,
 } from "./lib/hue";
-import { getIcon, getIconForColor, getLightIcon } from "./lib/utils";
-import { mutate } from "swr";
+import { getIconForColor, getLightIcon } from "./lib/utils";
 import { model } from "@peter-murray/hue-bridge-model";
 import { MutatePromise } from "@raycast/utils";
 import Style = Toast.Style;
@@ -32,237 +31,80 @@ export default function Command() {
             return room.lights.includes(`${light.id}`);
           }) ?? [];
 
-        return <Room key={room.id} mutateLights={mutateLights} room={room} lights={roomLights} />;
+        return <Room key={room.id} lights={roomLights} room={room} mutateLights={mutateLights} />;
       })}
     </List>
   );
 }
 
-function Room(props: { mutateLights: MutatePromise<model.Light[]>; room: model.LightGroup; lights: model.Light[] }) {
+function Room(props: { lights: model.Light[]; room: model.LightGroup; mutateLights: MutatePromise<model.Light[]> }) {
   return (
     <List.Section title={props.room.name}>
       {props.lights.map((light) => (
-        <Light
-          key={light.id}
-          room={props.room}
-          light={light}
-          handleToggle={() => handleToggle(props.mutateLights, props.room, light)}
-        />
+        <Light key={light.id} light={light} mutateLights={props.mutateLights} />
       ))}
     </List.Section>
   );
 }
 
-function Light(props: { room: model.LightGroup; light: model.Light; handleToggle: () => void }) {
+function Light(props: { light: model.Light; mutateLights: MutatePromise<model.Light[]> }) {
   return (
     <List.Item
       title={props.light.name}
       icon={getLightIcon(props.light)}
       actions={
         <ActionPanel>
-          <ToggleLightAction light={props.light} onToggle={props.handleToggle} />
+          <ActionPanel.Section></ActionPanel.Section>
+
+          <ToggleLightAction light={props.light} onToggle={() => handleToggle(props.light, props.mutateLights)} />
+          <ActionPanel.Section>
+            <SetBrightnessAction
+              light={props.light}
+              onSet={(percentage: number) => handleSetBrightness(props.light, props.mutateLights, percentage)}
+            />
+            <IncreaseBrightnessAction
+              light={props.light}
+              onIncrease={() => handleIncreaseBrightness(props.light, props.mutateLights)}
+            />
+            <DecreaseBrightnessAction
+              light={props.light}
+              onDecrease={() => handleDecreaseBrightness(props.light, props.mutateLights)}
+            />
+          </ActionPanel.Section>
+          <ActionPanel.Section>
+            <SetColorAction
+              light={props.light}
+              onSet={(color: CssColor) => handleSetColor(props.light, props.mutateLights, color)}
+            />
+
+            {/* TODO: Set/decrease/increase color temp (icon: 'Icon.Temperature'*/}
+          </ActionPanel.Section>
+
+          <ActionPanel.Section>
+            {/* TODO: Fix this only updating the selected light for some reason */}
+            <RefreshAction onRefresh={() => props.mutateLights()} />
+          </ActionPanel.Section>
         </ActionPanel>
       }
     />
   );
 }
 
-async function handleToggle(mutateHueState: MutatePromise<model.Light[]>, room: model.LightGroup, light: model.Light) {
-  const toast = await showToast(Style.Animated, light.state.on ? "Turning light off" : "Turning light on");
-
-  try {
-    await mutateHueState(toggleLight(light), {
-      optimisticUpdate(lights) {
-        return lights?.map((x) => (x.id === light.id ? { ...x, state: { ...x.state, on: !light.state.on } } : x));
-      },
-    });
-
-    toast.style = Style.Success;
-    toast.title = light.state.on ? "Turned light off" : "Turned light on";
-  } catch (e) {
-    toast.style = Style.Failure;
-    toast.title = light.state.on ? "Failed turning light off" : "Failed turning light on";
-    toast.message = e instanceof Error ? e.message : undefined;
-  }
-}
-
-function LightList() {
-  // const { data, isValidating, mutate } = useLights();
-
-  // Ideally we can move all of that to a separate action, unfortunately our current component tree doesn't work with SWR
-  // The action wouldn't be part of the SWRConfig and therefore mutates a different cache
-
-  async function handleIncreaseBrightness(index: number) {
-    if (!data) {
-      return;
-    }
-
-    const light = data[index];
-    const toast = await showToast(Style.Animated, "Increasing brightness");
-
-    try {
-      const newLights = [...data];
-      newLights[index] = { ...light, state: { ...light.state, on: true, brightness: calcIncreasedBrightness(light) } };
-      mutate(newLights, false);
-
-      await increaseBrightness(light);
-
-      mutate();
-
-      toast.style = Style.Success;
-      toast.title = "Increased brightness";
-    } catch (e) {
-      toast.style = Style.Failure;
-      toast.title = "Failed increasing brightness";
-      toast.message = e instanceof Error ? e.message : undefined;
-    }
-  }
-
-  async function handleDecreaseBrightness(index: number) {
-    if (!data) {
-      return;
-    }
-
-    const light = data[index];
-    const toast = await showToast(Style.Animated, "Decreasing brightness");
-
-    try {
-      const newLights = [...data];
-      newLights[index] = { ...light, state: { ...light.state, on: true, brightness: calcDecreasedBrightness(light) } };
-      mutate(newLights, false);
-
-      await decreaseBrightness(light);
-
-      mutate();
-
-      toast.style = Style.Success;
-      toast.title = "Decreased brightness";
-    } catch (e) {
-      toast.style = Style.Failure;
-      toast.title = "Failed decreasing brightness";
-      toast.message = e instanceof Error ? e.message : undefined;
-    }
-  }
-
-  async function handleSetBrightness(index: number, percentage: number) {
-    if (!data) {
-      return;
-    }
-
-    const light = data[index];
-    const toast = await showToast(Style.Animated, "Setting brightness");
-
-    try {
-      const newLights = [...data];
-      newLights[index] = { ...light, state: { ...light.state, on: true, brightness: (percentage / 100) * 255 } };
-      mutate(newLights, false);
-
-      await setBrightness(light, percentage);
-
-      mutate();
-
-      toast.style = Style.Success;
-      toast.title = `Set brightness to ${(percentage / 100).toLocaleString("en", { style: "percent" })}`;
-    } catch (e) {
-      toast.style = Style.Failure;
-      toast.title = "Failed setting brightness";
-      toast.message = e instanceof Error ? e.message : undefined;
-    }
-  }
-
-  async function handleSetColor(index: number, color: CssColor) {
-    if (!data) {
-      return;
-    }
-
-    const light = data[index];
-    const toast = await showToast(Style.Animated, "Setting color");
-
-    try {
-      const newLights = [...data];
-      newLights[index] = { ...light, state: { ...light.state, on: true, xy: convertToXY(color.value) } };
-      mutate(newLights, false);
-
-      await setColor(light, color.value);
-
-      mutate();
-
-      toast.style = Style.Success;
-      toast.title = `Set color to ${color.name}`;
-    } catch (e) {
-      toast.style = Style.Failure;
-      toast.title = "Failed setting color";
-      toast.message = e instanceof Error ? e.message : undefined;
-    }
-  }
-
-  return (
-    <List isLoading={isValidating}>
-      {data?.map((light, index: number) => (
-        <List.Item
-          key={light.id}
-          title={light.name}
-          icon={getIcon(light)}
-          accessoryTitle={getAccessoryTitle(light)}
-          actions={
-            <ActionPanel title={light.name}>
-              <ActionPanel.Section>
-                <ToggleLightAction light={light} onToggle={() => handleToggle(index)} />
-              </ActionPanel.Section>
-              <ActionPanel.Section>
-                <SetColorAction light={light} onSet={(color) => handleSetColor(index, color)} />
-                <SetBrightnessAction light={light} onSet={(percentage) => handleSetBrightness(index, percentage)} />
-                <IncreaseBrightnessAction light={light} onIncrease={() => handleIncreaseBrightness(index)} />
-                <DecreaseBrightnessAction light={light} onDecrease={() => handleDecreaseBrightness(index)} />
-              </ActionPanel.Section>
-              <ActionPanel.Section>
-                <RefreshAction onRefresh={() => mutate()} />
-              </ActionPanel.Section>
-            </ActionPanel>
-          }
-        />
-      ))}
-    </List>
-  );
-}
-
-function ToggleLightAction({ light, onToggle }: { light: Light; onToggle?: () => void }) {
+function ToggleLightAction({ light, onToggle }: { light: model.Light; onToggle?: () => void }) {
   return (
     <ActionPanel.Item
       title={light.state.on ? "Turn Off" : "Turn On"}
-      icon={light.state.on ? "light-off.png" : "light-on.png"}
+      icon={light.state.on ? Icon.LightBulbOff : Icon.LightBulb}
       onAction={onToggle}
     />
   );
 }
 
-function IncreaseBrightnessAction(props: { light: Light; onIncrease?: () => void }) {
-  return props.light.state.brightness < BRIGHTNESS_MAX ? (
-    <ActionPanel.Item
-      title="Increase Brightness"
-      shortcut={{ modifiers: ["cmd", "shift"], key: "arrowUp" }}
-      icon="increase.png"
-      onAction={props.onIncrease}
-    />
-  ) : null;
-}
-
-function DecreaseBrightnessAction(props: { light: Light; onDecrease?: () => void }) {
-  return props.light.state.brightness > BRIGHTNESS_MIN ? (
-    <ActionPanel.Item
-      title="Decrease Brightness"
-      shortcut={{ modifiers: ["cmd", "shift"], key: "arrowDown" }}
-      icon="decrease.png"
-      onAction={props.onDecrease}
-    />
-  ) : null;
-}
-
-function SetBrightnessAction(props: { light: Light; onSet: (percentage: number) => void }) {
+function SetBrightnessAction(props: { light: model.Light; onSet: (percentage: number) => void }) {
   return (
     <ActionPanel.Submenu
       title="Set Brightness"
-      icon="brightness.png"
+      icon={Icon.CircleProgress}
       shortcut={{ modifiers: ["cmd", "shift"], key: "b" }}
     >
       {BRIGHTNESSES.map((brightness) => (
@@ -276,9 +118,31 @@ function SetBrightnessAction(props: { light: Light; onSet: (percentage: number) 
   );
 }
 
-function SetColorAction(props: { light: Light; onSet: (color: CssColor) => void }) {
+function IncreaseBrightnessAction(props: { light: model.Light; onIncrease?: () => void }) {
+  return props.light.state.bri < BRIGHTNESS_MAX ? (
+    <ActionPanel.Item
+      title="Increase Brightness"
+      shortcut={{ modifiers: ["cmd", "shift"], key: "arrowUp" }}
+      icon={Icon.PlusCircle}
+      onAction={props.onIncrease}
+    />
+  ) : null;
+}
+
+function DecreaseBrightnessAction(props: { light: model.Light; onDecrease?: () => void }) {
+  return props.light.state.bri > BRIGHTNESS_MIN ? (
+    <ActionPanel.Item
+      title="Decrease Brightness"
+      shortcut={{ modifiers: ["cmd", "shift"], key: "arrowDown" }}
+      icon={Icon.MinusCircle}
+      onAction={props.onDecrease}
+    />
+  ) : null;
+}
+
+function SetColorAction(props: { light: model.Light; onSet: (color: CssColor) => void }) {
   return (
-    <ActionPanel.Submenu title="Set Color" icon="color.png" shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}>
+    <ActionPanel.Submenu title="Set Color" icon={Icon.Swatch} shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}>
       {COLORS.map((color) => (
         <ActionPanel.Item
           key={color.name}
@@ -300,4 +164,110 @@ function RefreshAction(props: { onRefresh: () => void }) {
       onAction={props.onRefresh}
     />
   );
+}
+
+async function handleToggle(light: model.Light, mutateHueState: MutatePromise<model.Light[]>) {
+  const toast = await showToast(Style.Animated, light.state.on ? "Turning light off" : "Turning light on");
+
+  try {
+    await mutateHueState(toggleLight(light), {
+      optimisticUpdate(lights) {
+        return lights?.map((x) => (x.id === light.id ? { ...x, state: { ...x.state, on: !light.state.on } } : x));
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = light.state.on ? "Turned light off" : "Turned light on";
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = light.state.on ? "Failed turning light off" : "Failed turning light on";
+    toast.message = e instanceof Error ? e.message : undefined;
+  }
+}
+
+async function handleIncreaseBrightness(light: model.Light, mutateHueState: MutatePromise<model.Light[]>) {
+  const toast = await showToast(Style.Animated, "Increasing brightness");
+
+  try {
+    await mutateHueState(increaseBrightness(light), {
+      optimisticUpdate(lights) {
+        return lights?.map((x) =>
+          x.id === light.id ? { ...x, stat: { ...x.state, on: true, bri: calcIncreasedBrightness(light) } } : x
+        );
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = "Increased brightness";
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed increasing brightness";
+    toast.message = e instanceof Error ? e.message : undefined;
+  }
+}
+
+async function handleDecreaseBrightness(light: model.Light, mutateHueState: MutatePromise<model.Light[]>) {
+  const toast = await showToast(Style.Animated, "Increasing brightness");
+
+  try {
+    await mutateHueState(decreaseBrightness(light), {
+      optimisticUpdate(lights) {
+        return lights.map((x) =>
+          x.id === light.id ? { ...x, stat: { ...x.state, on: true, bri: calcDecreasedBrightness(light) } } : x
+        );
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = "Decreased brightness";
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed decreasing brightness";
+    toast.message = e instanceof Error ? e.message : undefined;
+  }
+}
+
+async function handleSetBrightness(
+  light: model.Light,
+  mutateHueState: MutatePromise<model.Light[]>,
+  percentage: number
+) {
+  const toast = await showToast(Style.Animated, "Setting brightness");
+  const brightness = (percentage / 100) * 253 + 1;
+
+  try {
+    await mutateHueState(setBrightness(light, brightness), {
+      optimisticUpdate(lights) {
+        return lights.map((x) => (x.id === light.id ? { ...x, stat: { ...x.state, on: true, bri: brightness } } : x));
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = `Set brightness to ${(percentage / 100).toLocaleString("en", { style: "percent" })}`;
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed setting brightness";
+    toast.message = e instanceof Error ? e.message : undefined;
+  }
+}
+
+async function handleSetColor(light: model.Light, mutateHueState: MutatePromise<model.Light[]>, color: CssColor) {
+  const toast = await showToast(Style.Animated, "Setting color");
+
+  try {
+    await mutateHueState(setColor(light, color.value), {
+      optimisticUpdate(lights) {
+        return lights.map((x) =>
+          x.id === light.id ? { ...x, stat: { ...x.state, on: true, xy: convertToXY(color.value) } } : x
+        );
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = `Set color to ${color.name}`;
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed setting color";
+    toast.message = e instanceof Error ? e.message : undefined;
+  }
 }

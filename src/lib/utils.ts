@@ -1,4 +1,4 @@
-import { Color, Image, showToast, Toast } from "@raycast/api";
+import { Color, Icon, Image, showToast, Toast } from "@raycast/api";
 import { CssColor, getHexFrom } from "./colors";
 import { Light } from "./types";
 import { getProgressIcon } from "@raycast/utils";
@@ -25,12 +25,12 @@ export async function showFailureToast<T>(
 
 export function getIcon(light: Light): Image {
   if (!light.state.reachable) {
-    return { source: "light-disconnected.png", tintColor: Color.SecondaryText };
+    return { source: Icon.Plug, tintColor: Color.SecondaryText };
   }
 
   const color = getHexFrom(light);
   return {
-    source: light.state.on ? "light-on.png" : "light-off.png",
+    source: light.state.on ? Icon.LightBulb : Icon.LightBulbOff,
     tintColor: { light: color, dark: color, adjustContrast: false },
   };
 }
@@ -51,5 +51,5 @@ export function getLightIcon(light: Light) {
 }
 
 export function getIconForColor(color: CssColor): Image {
-  return { source: "circle.png", tintColor: { light: color.value, dark: color.value, adjustContrast: false } };
+  return { source: Icon.CircleFilled, tintColor: { light: color.value, dark: color.value, adjustContrast: false } };
 }

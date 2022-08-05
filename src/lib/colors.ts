@@ -144,7 +144,7 @@ export const COLORS: CssColor[] = [
 ];
 
 export function convertToXY(color: string) {
-  const [red, green, blue] = hexToRgb(color);
+  const [red, green, blue] = hexToRGB(color);
   return rgbToXy(red, green, blue);
 }
 

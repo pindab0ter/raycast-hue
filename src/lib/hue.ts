@@ -4,12 +4,12 @@ import { convertToXY } from "./colors";
 import { LocalStorage } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
 import { model } from "@peter-murray/hue-bridge-model";
-import { Light } from "@peter-murray/hue-bridge-model/dist/esm/model/Light";
 
 const APP_NAME = "raycast_hue_extension";
 export const BRIDGE_IP_ADDRESS_KEY = "bridgeIpAddress";
 export const BRIDGE_USERNAME_KEY = "bridgeUsername";
 
+export const BRIGHTNESSES = [1].concat(Array.from(Array(10).keys()).map((i) => i * 10 + 10)).reverse();
 const BRIGHTNESS_STEP = 25.4;
 export const BRIGHTNESS_MAX = 254;
 export const BRIGHTNESS_MIN = 1;
@@ -135,38 +135,38 @@ export async function turnOffAllLights() {
   }
 }
 
-export async function toggleLight(light: Light) {
+export async function toggleLight(light: model.Light) {
   const api = await getAuthenticatedApi();
   await api.lights.setLightState(light.id, { on: !light.state.on });
 }
 
-export async function increaseBrightness(light: Light) {
+export async function increaseBrightness(light: model.Light) {
   const api = await getAuthenticatedApi();
   const newLightState = new v3.model.lightStates.LightState().on().bri_inc(BRIGHTNESS_STEP);
   await api.lights.setLightState(light.id, newLightState);
 }
 
-export function calcIncreasedBrightness(light: Light) {
+export function calcIncreasedBrightness(light: model.Light) {
   return Math.min(Math.max(BRIGHTNESS_MIN, light.state.bri + BRIGHTNESS_STEP), BRIGHTNESS_MAX);
 }
 
-export async function decreaseBrightness(light: Light) {
+export async function decreaseBrightness(light: model.Light) {
   const api = await getAuthenticatedApi();
   const newLightState = new v3.model.lightStates.LightState().on().bri_inc(-BRIGHTNESS_STEP);
   await api.lights.setLightState(light.id, newLightState);
 }
 
-export function calcDecreasedBrightness(light: Light) {
+export function calcDecreasedBrightness(light: model.Light) {
   return Math.min(Math.max(BRIGHTNESS_MIN, light.state.bri - BRIGHTNESS_STEP), BRIGHTNESS_MAX);
 }
 
-export async function setBrightness(light: Light, percentage: number) {
+export async function setBrightness(light: model.Light, percentage: number) {
   const api = await getAuthenticatedApi();
   const newLightState = new v3.model.lightStates.LightState().on().bri(percentage);
   await api.lights.setLightState(light.id, newLightState);
 }
 
-export async function setColor(light: Light, color: string) {
+export async function setColor(light: model.Light, color: string) {
   const api = await getAuthenticatedApi();
   const xy = convertToXY(color);
   const newLightState = new v3.model.lightStates.LightState().on().xy(xy);
