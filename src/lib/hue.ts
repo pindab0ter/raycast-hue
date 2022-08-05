@@ -16,38 +16,57 @@ export const BRIGHTNESS_MIN = 1;
 
 let _api: Api;
 
-export type HueState = {
-  lights: model.Light[];
-  groups: model.Group[];
-  scenes: model.Scene[];
-};
-
 export function useHue() {
-  const { data, isLoading, mutate } = useCachedPromise<() => Promise<HueState>>(
+  const {
+    isLoading: isLoadingLights,
+    data: lights,
+    mutate: mutateLights,
+  } = useCachedPromise(
     async () => {
       const api = await getAuthenticatedApi();
       const lights = await api.lights.getAll();
-      const groups = await api.groups.getAll();
-      const scenes = await api.scenes.getAll();
-
-      return {
-        lights: lights.map((light) => light["data"] as model.Light).filter((light) => light != null),
-        groups: groups.map((group) => group["data"] as model.Group).filter((group) => group != null),
-        scenes: scenes.map((scene) => scene["data"] as model.Scene).filter((scene) => scene != null),
-      };
+      return lights.map((light) => light["data"] as model.Light).filter((light) => light != null);
     },
     [],
     {
       keepPreviousData: true,
-      initialData: { lights: [], groups: [], scenes: [] },
+      initialData: [] as model.Light[],
+    }
+  );
+
+  const { isLoading: isLoadingGroups, data: groups } = useCachedPromise(
+    async () => {
+      const api = await getAuthenticatedApi();
+      const groups = await api.groups.getAll();
+      return groups.map((group) => group["data"] as model.Group).filter((group) => group != null);
+    },
+    [],
+    {
+      keepPreviousData: true,
+      initialData: [] as model.Group[],
+    }
+  );
+
+  const { isLoading: isLoadingScenes, data: scenes } = useCachedPromise(
+    async () => {
+      const api = await getAuthenticatedApi();
+      const scenes = await api.scenes.getAll();
+      return scenes.map((scene) => scene["data"] as model.Scene).filter((scene) => scene != null);
+    },
+    [],
+    {
+      keepPreviousData: true,
+      initialData: [] as model.Scene[],
     }
   );
 
   return {
-    hueState: data,
-    isLoadingHueState: isLoading,
-    mutateHueState: mutate,
-  }
+    isLoading: isLoadingLights || isLoadingGroups || isLoadingScenes,
+    lights,
+    mutateLights,
+    groups,
+    scenes,
+  };
 }
 
 export async function getAuthenticatedApi(): Promise<Api> {

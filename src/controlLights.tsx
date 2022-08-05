@@ -7,7 +7,6 @@ import {
   calcDecreasedBrightness,
   calcIncreasedBrightness,
   decreaseBrightness,
-  HueState,
   increaseBrightness,
   setBrightness,
   setColor,
@@ -15,37 +14,31 @@ import {
   useHue,
 } from "./lib/hue";
 import { getIcon, getIconForColor, getLightIcon } from "./lib/utils";
-import { Light } from "@peter-murray/hue-bridge-model/dist/esm/model/Light";
 import { mutate } from "swr";
 import { model } from "@peter-murray/hue-bridge-model";
-import LightGroup from "node-hue-api/lib/model/groups/LightGroup";
 import { MutatePromise } from "@raycast/utils";
 import Style = Toast.Style;
 
 export default function Command() {
-  const { isLoadingHueState, hueState, mutateHueState } = useHue();
+  const { isLoading, lights, mutateLights, groups } = useHue();
 
-  if (hueState === undefined) {
-    return <List isLoading={true} />;
-  }
-
-  const rooms = hueState?.groups.filter((group) => group.type == "Room") as unknown as LightGroup[];
+  const rooms = groups.filter((group) => group.type == "Room") as unknown as model.LightGroup[];
 
   return (
-    <List isLoading={isLoadingHueState}>
-      {rooms.map((room: LightGroup) => {
-        const lights =
-          hueState?.lights.filter((light: model.Light) => {
+    <List isLoading={isLoading}>
+      {rooms.map((room: model.LightGroup) => {
+        const roomLights =
+          lights.filter((light: model.Light) => {
             return room.lights.includes(`${light.id}`);
           }) ?? [];
 
-        return <Room key={room.id} state={hueState} mutateHueState={mutateHueState} room={room} lights={lights} />;
+        return <Room key={room.id} mutateLights={mutateLights} room={room} lights={roomLights} />;
       })}
     </List>
   );
 }
 
-function Room(props: { state: HueState; mutateHueState: MutatePromise<HueState | undefined>; room: LightGroup; lights: model.Light[] }) {
+function Room(props: { mutateLights: MutatePromise<model.Light[]>; room: model.LightGroup; lights: model.Light[] }) {
   return (
     <List.Section title={props.room.name}>
       {props.lights.map((light) => (
@@ -53,14 +46,14 @@ function Room(props: { state: HueState; mutateHueState: MutatePromise<HueState |
           key={light.id}
           room={props.room}
           light={light}
-          handleToggle={() => handleToggle(props.state, props.mutateHueState, props.room, light)}
+          handleToggle={() => handleToggle(props.mutateLights, props.room, light)}
         />
       ))}
     </List.Section>
   );
 }
 
-function Light(props: { room: LightGroup; light: model.Light; handleToggle: () => void }) {
+function Light(props: { room: model.LightGroup; light: model.Light; handleToggle: () => void }) {
   return (
     <List.Item
       title={props.light.name}
@@ -74,26 +67,13 @@ function Light(props: { room: LightGroup; light: model.Light; handleToggle: () =
   );
 }
 
-async function handleToggle(
-  hueState: HueState,
-  mutateHueState: MutatePromise<HueState | undefined>,
-  room: LightGroup,
-  light: model.Light
-) {
+async function handleToggle(mutateHueState: MutatePromise<model.Light[]>, room: model.LightGroup, light: model.Light) {
   const toast = await showToast(Style.Animated, light.state.on ? "Turning light off" : "Turning light on");
 
   try {
-    const newLights = [...hueState.lights];
-
     await mutateHueState(toggleLight(light), {
-      optimisticUpdate(data) {
-        if (data === undefined) {
-          return data;
-        }
-        return {
-          ...data,
-          lights: data?.lights?.map((x) => (x.id === light.id ? { ...x, state: { ... x.state, on: !light.state.on} } : x)),
-        };
+      optimisticUpdate(lights) {
+        return lights?.map((x) => (x.id === light.id ? { ...x, state: { ...x.state, on: !light.state.on } } : x));
       },
     });
 
