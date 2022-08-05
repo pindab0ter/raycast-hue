@@ -15,10 +15,10 @@
       "mode": "view"
     },
     {
-      "name": "controlRooms",
-      "title": "Control Rooms",
+      "name": "controlRoomsAndZones",
+      "title": "Control Rooms and Zones",
       "subtitle": "Hue",
-      "description": "List, search and control rooms",
+      "description": "List, search and control rooms and zones",
       "mode": "view"
     },
     {
