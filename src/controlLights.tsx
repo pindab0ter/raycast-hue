@@ -60,9 +60,10 @@ function Light(props: { light: Light; mutateLights: MutatePromise<Light[]> }) {
       icon={getLightIcon(props.light)}
       actions={
         <ActionPanel>
-          <ActionPanel.Section></ActionPanel.Section>
+          <ActionPanel.Section>
+            <ToggleLightAction light={props.light} onToggle={() => handleToggle(props.light, props.mutateLights)} />
+          </ActionPanel.Section>
 
-          <ToggleLightAction light={props.light} onToggle={() => handleToggle(props.light, props.mutateLights)} />
           <ActionPanel.Section>
             <SetBrightnessAction
               light={props.light}
