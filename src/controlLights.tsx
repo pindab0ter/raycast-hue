@@ -57,7 +57,7 @@ function Light(props: { light: Light; mutateLights: MutatePromise<Light[]> }) {
   return (
     <List.Item
       title={props.light.name}
-      icon={getLightIcon(props.light)}
+      icon={getLightIcon(props.light.state)}
       actions={
         <ActionPanel>
           <ActionPanel.Section>
@@ -208,13 +208,13 @@ function RefreshAction(props: { onRefresh: () => void }) {
   );
 }
 
-async function handleToggle(light: Light, mutateHueState: MutatePromise<Light[]>) {
+async function handleToggle(light: Light, mutateLights: MutatePromise<Light[]>) {
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateHueState(toggleLight(light), {
+    await mutateLights(toggleLight(light), {
       optimisticUpdate(lights) {
-        return lights?.map((x) => (x.id === light.id ? { ...x, state: { ...x.state, on: !light.state.on } } : x));
+        return lights?.map((it) => (it.id === light.id ? { ...it, state: { ...it.state, on: !light.state.on } } : it));
       },
     });
 
@@ -229,14 +229,16 @@ async function handleToggle(light: Light, mutateHueState: MutatePromise<Light[]>
   }
 }
 
-async function handleSetBrightness(light: Light, mutateHueState: MutatePromise<Light[]>, percentage: number) {
+async function handleSetBrightness(light: Light, mutateLights: MutatePromise<Light[]>, percentage: number) {
   const toast = new Toast({ title: "" });
   const brightness = (percentage / 100) * 253 + 1;
 
   try {
-    await mutateHueState(setBrightness(light, brightness), {
+    await mutateLights(setBrightness(light, brightness), {
       optimisticUpdate(lights) {
-        return lights.map((x) => (x.id === light.id ? { ...x, stat: { ...x.state, on: true, bri: brightness } } : x));
+        return lights.map((it) =>
+          it.id === light.id ? { ...it, state: { ...it.state, on: true, bri: brightness } } : it
+        );
       },
     });
 
@@ -251,14 +253,14 @@ async function handleSetBrightness(light: Light, mutateHueState: MutatePromise<L
   }
 }
 
-async function handleIncreaseBrightness(light: Light, mutateHueState: MutatePromise<Light[]>) {
+async function handleIncreaseBrightness(light: Light, mutateLights: MutatePromise<Light[]>) {
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateHueState(increaseBrightness(light), {
+    await mutateLights(increaseBrightness(light), {
       optimisticUpdate(lights) {
-        return lights?.map((x) =>
-          x.id === light.id ? { ...x, stat: { ...x.state, on: true, bri: calcIncreasedBrightness(light) } } : x
+        return lights?.map((it) =>
+          it.id === light.id ? { ...it, state: { ...it.state, on: true, bri: calcIncreasedBrightness(light) } } : it
         );
       },
     });
@@ -274,14 +276,14 @@ async function handleIncreaseBrightness(light: Light, mutateHueState: MutateProm
   }
 }
 
-async function handleDecreaseBrightness(light: Light, mutateHueState: MutatePromise<Light[]>) {
+async function handleDecreaseBrightness(light: Light, mutateLights: MutatePromise<Light[]>) {
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateHueState(decreaseBrightness(light), {
+    await mutateLights(decreaseBrightness(light), {
       optimisticUpdate(lights) {
-        return lights.map((x) =>
-          x.id === light.id ? { ...x, stat: { ...x.state, on: true, bri: calcDecreasedBrightness(light) } } : x
+        return lights.map((it) =>
+          it.id === light.id ? { ...it, state: { ...it.state, on: true, bri: calcDecreasedBrightness(light) } } : it
         );
       },
     });
@@ -297,14 +299,14 @@ async function handleDecreaseBrightness(light: Light, mutateHueState: MutateProm
   }
 }
 
-async function handleSetColor(light: Light, mutateHueState: MutatePromise<Light[]>, color: CssColor) {
+async function handleSetColor(light: Light, mutateLights: MutatePromise<Light[]>, color: CssColor) {
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateHueState(setColor(light, color.value), {
+    await mutateLights(setColor(light, color.value), {
       optimisticUpdate(lights) {
-        return lights.map((x) =>
-          x.id === light.id ? { ...x, stat: { ...x.state, on: true, xy: convertToXY(color.value) } } : x
+        return lights.map((it) =>
+          it.id === light.id ? { ...it, state: { ...it.state, on: true, xy: convertToXY(color.value) } } : it
         );
       },
     });
@@ -320,14 +322,14 @@ async function handleSetColor(light: Light, mutateHueState: MutatePromise<Light[
   }
 }
 
-async function handleIncreaseColorTemperature(light: Light, mutateHueState: MutatePromise<Light[]>) {
+async function handleIncreaseColorTemperature(light: Light, mutateLights: MutatePromise<Light[]>) {
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateHueState(increaseColorTemperature(light), {
+    await mutateLights(increaseColorTemperature(light), {
       optimisticUpdate(lights) {
-        return lights?.map((x) =>
-          x.id === light.id ? { ...x, stat: { ...x.state, ct: calcIncreasedColorTemperature(light) } } : x
+        return lights?.map((it) =>
+          it.id === light.id ? { ...it, state: { ...it.state, ct: calcIncreasedColorTemperature(light) } } : it
         );
       },
     });
@@ -343,14 +345,14 @@ async function handleIncreaseColorTemperature(light: Light, mutateHueState: Muta
   }
 }
 
-async function handleDecreaseColorTemperature(light: Light, mutateHueState: MutatePromise<Light[]>) {
+async function handleDecreaseColorTemperature(light: Light, mutateLights: MutatePromise<Light[]>) {
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateHueState(decreaseColorTemperature(light), {
+    await mutateLights(decreaseColorTemperature(light), {
       optimisticUpdate(lights) {
-        return lights.map((x) =>
-          x.id === light.id ? { ...x, stat: { ...x.state, ct: calcDecreasedColorTemperature(light) } } : x
+        return lights.map((it) =>
+          it.id === light.id ? { ...it, state: { ...it.state, ct: calcDecreasedColorTemperature(light) } } : it
         );
       },
     });

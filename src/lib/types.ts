@@ -31,15 +31,7 @@ export interface Group {
   sensors: id[];
   type: "Luminaire" | "Lightsource" | "LightGroup" | "Room" | "Entertainment" | "Zone";
   state: { all_on: boolean; any_on: boolean };
-  action: {
-    on: boolean;
-    hue: number;
-    effect: "none" | "colorloop";
-    bri: number;
-    sat: number;
-    ct: number;
-    xy: [number, number];
-  };
+  action: LightState;
 }
 
 export interface Room extends Group {

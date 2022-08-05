@@ -1,6 +1,6 @@
 import { Color, Icon, Image, showToast, Toast } from "@raycast/api";
 import { CssColor, getHexFrom } from "./colors";
-import { Light } from "./types";
+import { Light, LightState } from "./types";
 import { getProgressIcon } from "@raycast/utils";
 import Style = Toast.Style;
 
@@ -28,22 +28,22 @@ export function getIcon(light: Light): Image {
     return { source: Icon.Plug, tintColor: Color.SecondaryText };
   }
 
-  const color = getHexFrom(light);
+  const color = getHexFrom(light.state);
   return {
     source: light.state.on ? Icon.LightBulb : Icon.LightBulbOff,
     tintColor: { light: color, dark: color, adjustContrast: false },
   };
 }
 
-export function getLightIcon(light: Light) {
-  const progress = light.state.on ? (light.state.bri - 1) / 253 : 0;
+export function getLightIcon(lightState: LightState) {
+  const progress = lightState.on ? (lightState.bri - 1) / 253 : 0;
 
-  if (light.state.colormode === "xy") {
-    const color = getHexFrom(light);
+  if (lightState.colormode === "xy") {
+    const color = getHexFrom(lightState);
     return getProgressIcon(progress, color);
   }
 
-  if (light.state.colormode === "ct") {
+  if (lightState.colormode === "ct") {
     // TODO: Convert from CT to RGB
   }
 

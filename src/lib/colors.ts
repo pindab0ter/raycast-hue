@@ -1,5 +1,5 @@
 import assert from "assert";
-import { Light } from "./types";
+import { LightState } from "./types";
 import { getProperty } from "dot-prop";
 
 export interface CssColor {
@@ -148,8 +148,8 @@ export function convertToXY(color: string) {
   return rgbToXy(red, green, blue);
 }
 
-export function getHexFrom(light: Light) {
-  return cieToHex(light.state.xy[0], light.state.xy[1], light.state.brightness);
+export function getHexFrom(lightState: LightState) {
+  return cieToHex(lightState.xy[0], lightState.xy[1], lightState.bri);
 }
 
 function hexToRGB(hex: string) {

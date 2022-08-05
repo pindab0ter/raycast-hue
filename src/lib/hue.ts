@@ -10,7 +10,7 @@ export const BRIDGE_IP_ADDRESS_KEY = "bridgeIpAddress";
 export const BRIDGE_USERNAME_KEY = "bridgeUsername";
 
 export const BRIGHTNESSES = [1].concat(Array.from(Array(10).keys()).map((i) => i * 10 + 10)).reverse();
-// TODO: Change into lookup table so that each step corresponds to a 10% value
+// TODO: Change into lookup table so that each step corresponds to a 10% value and use setBrightness instead of increase/decrease
 const BRIGHTNESS_STEP = 25.4;
 export const BRIGHTNESS_MAX = 254;
 export const BRIGHTNESS_MIN = 1;
@@ -38,7 +38,11 @@ export function useHue() {
     }
   );
 
-  const { isLoading: isLoadingGroups, data: groups } = useCachedPromise(
+  const {
+    isLoading: isLoadingGroups,
+    data: groups,
+    mutate: mutateGroups,
+  } = useCachedPromise(
     async () => {
       const api = await getAuthenticatedApi();
       const groups = await api.groups.getAll();
@@ -69,6 +73,7 @@ export function useHue() {
     lights,
     mutateLights,
     groups,
+    mutateGroups,
     scenes,
   };
 }
@@ -195,4 +200,14 @@ export async function decreaseColorTemperature(light: Light) {
 
 export function calcDecreasedColorTemperature(light: Light) {
   return Math.min(Math.max(COLOR_TEMP_MIN, light.state.bri + COLOR_TEMPERATURE_STEP), COLOR_TEMP_MAX);
+}
+
+export async function turnAllLightsOn(group: Group) {
+  const api = await getAuthenticatedApi();
+  await api.groups.setGroupState(group.id, new v3.model.lightStates.GroupLightState().on());
+}
+
+export async function turnAllLightsOff(group: Group) {
+  const api = await getAuthenticatedApi();
+  await api.groups.setGroupState(group.id, new v3.model.lightStates.GroupLightState().off());
 }

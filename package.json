@@ -8,9 +8,17 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "manageHueBridge",
-      "title": "Manage Hue Bridge",
-      "description": "Set up or remove your Hue Bridge.",
+      "name": "controlLights",
+      "title": "Control Lights",
+      "subtitle": "Hue",
+      "description": "List, search and control lights",
+      "mode": "view"
+    },
+    {
+      "name": "controlRooms",
+      "title": "Control Rooms",
+      "subtitle": "Hue",
+      "description": "List, search and control rooms",
       "mode": "view"
     },
     {
@@ -21,10 +29,9 @@
       "mode": "no-view"
     },
     {
-      "name": "controlLights",
-      "title": "Control Lights",
-      "subtitle": "Hue",
-      "description": "List, search and control lights",
+      "name": "manageHueBridge",
+      "title": "Manage Hue Bridge",
+      "description": "Set up or remove your Hue Bridge.",
       "mode": "view"
     }
   ],
