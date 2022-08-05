@@ -6,8 +6,8 @@ export default async () => {
   try {
     await closeMainWindow();
     await turnOffAllLights();
-    showHUD("Turned off all lights");
+    await showHUD("Turned off all lights");
   } catch (error) {
-    showFailureToast(error, "Failed turning off all lights");
+    await showFailureToast(error, "Failed turning off all lights");
   }
 };
