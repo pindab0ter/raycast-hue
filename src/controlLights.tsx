@@ -5,9 +5,15 @@ import {
   BRIGHTNESS_MIN,
   BRIGHTNESSES,
   calcDecreasedBrightness,
+  calcDecreasedColorTemperature,
   calcIncreasedBrightness,
+  calcIncreasedColorTemperature,
+  COLOR_TEMP_MAX,
+  COLOR_TEMP_MIN,
   decreaseBrightness,
+  decreaseColorTemperature,
   increaseBrightness,
+  increaseColorTemperature,
   setBrightness,
   setColor,
   toggleLight,
@@ -15,8 +21,8 @@ import {
 } from "./lib/hue";
 import { getIconForColor, getLightIcon } from "./lib/utils";
 import { MutatePromise } from "@raycast/utils";
-import Style = Toast.Style;
 import { Light, Room } from "./lib/types";
+import Style = Toast.Style;
 
 export default function Command() {
   const { isLoading, lights, mutateLights, groups } = useHue();
@@ -62,6 +68,7 @@ function Light(props: { light: Light; mutateLights: MutatePromise<Light[]> }) {
               light={props.light}
               onSet={(percentage: number) => handleSetBrightness(props.light, props.mutateLights, percentage)}
             />
+            {/* TODO: Handle holding the key combo properly */}
             <IncreaseBrightnessAction
               light={props.light}
               onIncrease={() => handleIncreaseBrightness(props.light, props.mutateLights)}
@@ -72,12 +79,24 @@ function Light(props: { light: Light; mutateLights: MutatePromise<Light[]> }) {
             />
           </ActionPanel.Section>
           <ActionPanel.Section>
-            <SetColorAction
-              light={props.light}
-              onSet={(color: CssColor) => handleSetColor(props.light, props.mutateLights, color)}
-            />
-
-            {/* TODO: Set/decrease/increase color temp (icon: 'Icon.Temperature'*/}
+            {props.light.state.colormode == "xy" && (
+              <SetColorAction
+                light={props.light}
+                onSet={(color: CssColor) => handleSetColor(props.light, props.mutateLights, color)}
+              />
+            )}
+            {props.light.state.colormode == "ct" && (
+              <IncreaseColorTemperatureAction
+                light={props.light}
+                onIncrease={() => handleIncreaseColorTemperature(props.light, props.mutateLights)}
+              />
+            )}
+            {props.light.state.colormode == "ct" && (
+              <DecreaseColorTemperatureAction
+                light={props.light}
+                onDecrease={() => handleDecreaseColorTemperature(props.light, props.mutateLights)}
+              />
+            )}
           </ActionPanel.Section>
 
           <ActionPanel.Section>
@@ -155,6 +174,28 @@ function SetColorAction(props: { light: Light; onSet: (color: CssColor) => void 
   );
 }
 
+function IncreaseColorTemperatureAction(props: { light: Light; onIncrease?: () => void }) {
+  return props.light.state.bri > COLOR_TEMP_MIN ? (
+    <ActionPanel.Item
+      title="Increase Color Temperature"
+      shortcut={{ modifiers: ["cmd", "shift"], key: "arrowRight" }}
+      icon={Icon.PlusCircle}
+      onAction={props.onIncrease}
+    />
+  ) : null;
+}
+
+function DecreaseColorTemperatureAction(props: { light: Light; onDecrease?: () => void }) {
+  return props.light.state.bri < COLOR_TEMP_MAX ? (
+    <ActionPanel.Item
+      title="Decrease Color Temperature"
+      shortcut={{ modifiers: ["cmd", "shift"], key: "arrowLeft" }}
+      icon={Icon.MinusCircle}
+      onAction={props.onDecrease}
+    />
+  ) : null;
+}
+
 function RefreshAction(props: { onRefresh: () => void }) {
   return (
     <ActionPanel.Item
@@ -181,6 +222,26 @@ async function handleToggle(light: Light, mutateHueState: MutatePromise<Light[]>
   } catch (e) {
     toast.style = Style.Failure;
     toast.title = light.state.on ? "Failed turning light off" : "Failed turning light on";
+    toast.message = e instanceof Error ? e.message : undefined;
+  }
+}
+
+async function handleSetBrightness(light: Light, mutateHueState: MutatePromise<Light[]>, percentage: number) {
+  const toast = await showToast(Style.Animated, "Setting brightness");
+  const brightness = (percentage / 100) * 253 + 1;
+
+  try {
+    await mutateHueState(setBrightness(light, brightness), {
+      optimisticUpdate(lights) {
+        return lights.map((x) => (x.id === light.id ? { ...x, stat: { ...x.state, on: true, bri: brightness } } : x));
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = `Set brightness to ${(percentage / 100).toLocaleString("en", { style: "percent" })}`;
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed setting brightness";
     toast.message = e instanceof Error ? e.message : undefined;
   }
 }
@@ -227,30 +288,6 @@ async function handleDecreaseBrightness(light: Light, mutateHueState: MutateProm
   }
 }
 
-async function handleSetBrightness(
-  light: Light,
-  mutateHueState: MutatePromise<Light[]>,
-  percentage: number
-) {
-  const toast = await showToast(Style.Animated, "Setting brightness");
-  const brightness = (percentage / 100) * 253 + 1;
-
-  try {
-    await mutateHueState(setBrightness(light, brightness), {
-      optimisticUpdate(lights) {
-        return lights.map((x) => (x.id === light.id ? { ...x, stat: { ...x.state, on: true, bri: brightness } } : x));
-      },
-    });
-
-    toast.style = Style.Success;
-    toast.title = `Set brightness to ${(percentage / 100).toLocaleString("en", { style: "percent" })}`;
-  } catch (e) {
-    toast.style = Style.Failure;
-    toast.title = "Failed setting brightness";
-    toast.message = e instanceof Error ? e.message : undefined;
-  }
-}
-
 async function handleSetColor(light: Light, mutateHueState: MutatePromise<Light[]>, color: CssColor) {
   const toast = await showToast(Style.Animated, "Setting color");
 
@@ -268,6 +305,48 @@ async function handleSetColor(light: Light, mutateHueState: MutatePromise<Light[
   } catch (e) {
     toast.style = Style.Failure;
     toast.title = "Failed setting color";
+    toast.message = e instanceof Error ? e.message : undefined;
+  }
+}
+
+async function handleIncreaseColorTemperature(light: Light, mutateHueState: MutatePromise<Light[]>) {
+  const toast = await showToast(Style.Animated, "Increasing color temperature");
+
+  try {
+    await mutateHueState(increaseColorTemperature(light), {
+      optimisticUpdate(lights) {
+        return lights?.map((x) =>
+          x.id === light.id ? { ...x, stat: { ...x.state, ct: calcIncreasedColorTemperature(light) } } : x
+        );
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = "Increased color temperature";
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed increasing color temperature";
+    toast.message = e instanceof Error ? e.message : undefined;
+  }
+}
+
+async function handleDecreaseColorTemperature(light: Light, mutateHueState: MutatePromise<Light[]>) {
+  const toast = await showToast(Style.Animated, "Increasing color temperature");
+
+  try {
+    await mutateHueState(decreaseColorTemperature(light), {
+      optimisticUpdate(lights) {
+        return lights.map((x) =>
+          x.id === light.id ? { ...x, stat: { ...x.state, ct: calcDecreasedColorTemperature(light) } } : x
+        );
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = "Decreased color temperature";
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed decreasing color temperature";
     toast.message = e instanceof Error ? e.message : undefined;
   }
 }

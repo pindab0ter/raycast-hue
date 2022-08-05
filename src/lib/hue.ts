@@ -10,9 +10,13 @@ export const BRIDGE_IP_ADDRESS_KEY = "bridgeIpAddress";
 export const BRIDGE_USERNAME_KEY = "bridgeUsername";
 
 export const BRIGHTNESSES = [1].concat(Array.from(Array(10).keys()).map((i) => i * 10 + 10)).reverse();
+// TODO: Change into lookup table so that each step corresponds to a 10% value
 const BRIGHTNESS_STEP = 25.4;
 export const BRIGHTNESS_MAX = 254;
 export const BRIGHTNESS_MIN = 1;
+const COLOR_TEMPERATURE_STEP = (500.0 - 153.0) / 10.0;
+export const COLOR_TEMP_MAX = 500;
+export const COLOR_TEMP_MIN = 153;
 
 let _api: Api;
 
@@ -171,4 +175,24 @@ export async function setColor(light: Light, color: string) {
   const xy = convertToXY(color);
   const newLightState = new v3.model.lightStates.LightState().on().xy(xy);
   await api.lights.setLightState(light.id, newLightState);
+}
+
+export async function increaseColorTemperature(light: Light) {
+  const api = await getAuthenticatedApi();
+  const newLightState = new v3.model.lightStates.LightState().on().ct_inc(-COLOR_TEMPERATURE_STEP);
+  await api.lights.setLightState(light.id, newLightState);
+}
+
+export function calcIncreasedColorTemperature(light: Light) {
+  return Math.min(Math.max(COLOR_TEMP_MIN, light.state.bri - COLOR_TEMPERATURE_STEP), COLOR_TEMP_MAX);
+}
+
+export async function decreaseColorTemperature(light: Light) {
+  const api = await getAuthenticatedApi();
+  const newLightState = new v3.model.lightStates.LightState().on().ct_inc(COLOR_TEMPERATURE_STEP);
+  await api.lights.setLightState(light.id, newLightState);
+}
+
+export function calcDecreasedColorTemperature(light: Light) {
+  return Math.min(Math.max(COLOR_TEMP_MIN, light.state.bri + COLOR_TEMPERATURE_STEP), COLOR_TEMP_MAX);
 }
