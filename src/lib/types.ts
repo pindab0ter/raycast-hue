@@ -79,7 +79,7 @@ export interface Room extends Group {
 }
 
 export interface Scene {
-  id: id;
+  id: string;
   name: string;
   type: "LightScene" | "GroupScene";
   group: id,

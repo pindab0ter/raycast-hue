@@ -211,3 +211,8 @@ export async function turnAllLightsOff(group: Group) {
   const api = await getAuthenticatedApi();
   await api.groups.setGroupState(group.id, new v3.model.lightStates.GroupLightState().off());
 }
+
+export async function setScene(scene: Scene) {
+  const api = await getAuthenticatedApi();
+  await api.groups.setGroupState(0, new v3.model.lightStates.GroupLightState().scene(scene.id));
+}

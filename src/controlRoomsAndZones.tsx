@@ -1,12 +1,12 @@
 import { ActionPanel, Icon, List, Toast } from "@raycast/api";
-import { turnAllLightsOff, turnAllLightsOn, useHue } from "./lib/hue";
+import { setScene, turnAllLightsOff, turnAllLightsOn, useHue } from "./lib/hue";
 import { MutatePromise } from "@raycast/utils";
-import { Group, Room } from "./lib/types";
+import { Group, Room, Scene } from "./lib/types";
 import { getLightIcon } from "./lib/utils";
 import Style = Toast.Style;
 
 export default function Command() {
-  const { isLoading, groups, mutateGroups } = useHue();
+  const { isLoading, groups, mutateGroups, scenes } = useHue();
 
   const rooms = groups.filter((group) => group.type == "Room") as Room[];
   const zones = groups.filter((group) => group.type == "Zone");
@@ -16,7 +16,8 @@ export default function Command() {
       {rooms.length > 0 && (
         <List.Section title="Rooms">
           {rooms.map((room: Room) => {
-            return <Group key={room.id} group={room} mutateGroups={mutateGroups} />;
+            const groupScenes = scenes.filter((scene) => scene.group == room.id);
+            return <Group key={room.id} group={room} mutateGroups={mutateGroups} scenes={groupScenes} />;
           })}
         </List.Section>
       )}
@@ -31,7 +32,7 @@ export default function Command() {
   );
 }
 
-function Group(props: { group: Group; mutateGroups: MutatePromise<Group[]> }) {
+function Group(props: { group: Group; mutateGroups: MutatePromise<Group[]>; scenes?: Scene[] }) {
   return (
     <List.Item
       key={props.group.id}
@@ -39,14 +40,19 @@ function Group(props: { group: Group; mutateGroups: MutatePromise<Group[]> }) {
       icon={getLightIcon(props.group.action)}
       actions={
         <ActionPanel>
-          <ActionPanel.Section>
-            {!props.group.state.all_on && (
-              <TurnAllOnAction onTurnAllOn={() => handleTurnAllOn(props.group, props.mutateGroups)} />
-            )}
-            {props.group.state.any_on && (
-              <TurnAllOffAction onTurnAllOff={() => handleTurnAllOff(props.group, props.mutateGroups)} />
-            )}
-          </ActionPanel.Section>
+          {!props.group.state.all_on && (
+            <TurnAllOnAction onTurnAllOn={() => handleTurnAllOn(props.group, props.mutateGroups)} />
+          )}
+          {props.group.state.any_on && (
+            <TurnAllOffAction onTurnAllOff={() => handleTurnAllOff(props.group, props.mutateGroups)} />
+          )}
+          {(props.scenes?.length ?? 0) > 0 && (
+            <SetSceneAction
+              group={props.group}
+              scenes={props.scenes ?? []}
+              onSetScene={(scene: Scene) => scene && handleSetScene(props.group, scene, props.mutateGroups)}
+            />
+          )}
 
           {/*<ActionPanel.Section>*/}
           {/*  <SetBrightnessAction*/}
@@ -99,6 +105,16 @@ function TurnAllOnAction({ onTurnAllOn }: { onTurnAllOn?: () => void }) {
 
 function TurnAllOffAction({ onTurnAllOff }: { onTurnAllOff?: () => void }) {
   return <ActionPanel.Item title="Turn All Off" icon={Icon.LightBulbOff} onAction={onTurnAllOff} />;
+}
+
+function SetSceneAction(props: { group: Group; scenes: Scene[]; onSetScene: (scene: Scene) => void }) {
+  return (
+    <ActionPanel.Submenu title="Set Scene" icon={Icon.Image}>
+      {props.scenes.map((scene) => (
+        <ActionPanel.Item key={scene.id} title={scene.name} onAction={() => props.onSetScene(scene)} />
+      ))}
+    </ActionPanel.Submenu>
+  );
 }
 
 // function SetBrightnessAction(props: { group: Light; onSet: (percentage: number) => void }) {
@@ -197,7 +213,7 @@ async function handleTurnAllOn(group: Group, mutateGroups: MutatePromise<Group[]
       optimisticUpdate(groups) {
         // TODO: Figure out why this doesn't update the state
         return groups.map((it) => (it.id === group.id ? { ...it, state: { any_on: true, all_on: true } } : it));
-      }
+      },
     });
 
     toast.style = Style.Success;
@@ -218,7 +234,7 @@ async function handleTurnAllOff(group: Group, mutateGroups: MutatePromise<Group[
     await mutateGroups(turnAllLightsOff(group), {
       optimisticUpdate(groups) {
         return groups?.map((it) => (it.id === group.id ? { ...it, state: { any_on: false, all_on: false } } : it));
-      }
+      },
     });
 
     toast.style = Style.Success;
@@ -227,6 +243,23 @@ async function handleTurnAllOff(group: Group, mutateGroups: MutatePromise<Group[
   } catch (e) {
     toast.style = Style.Failure;
     toast.title = "Failed turning group off";
+    toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
+  }
+}
+
+async function handleSetScene(group: Group, scene: Scene, mutateGroups: MutatePromise<Group[]>) {
+  const toast = new Toast({ title: "" });
+
+  try {
+    await mutateGroups(setScene(scene));
+
+    toast.style = Style.Success;
+    toast.title = "Set scene";
+    await toast.show();
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed set scene";
     toast.message = e instanceof Error ? e.message : undefined;
     await toast.show();
   }
