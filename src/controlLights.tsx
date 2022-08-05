@@ -14,20 +14,20 @@ import {
   useHue,
 } from "./lib/hue";
 import { getIconForColor, getLightIcon } from "./lib/utils";
-import { model } from "@peter-murray/hue-bridge-model";
 import { MutatePromise } from "@raycast/utils";
 import Style = Toast.Style;
+import { Light, Room } from "./lib/types";
 
 export default function Command() {
   const { isLoading, lights, mutateLights, groups } = useHue();
 
-  const rooms = groups.filter((group) => group.type == "Room") as unknown as model.LightGroup[];
+  const rooms = groups.filter((group) => group.type == "Room") as unknown as Room[];
 
   return (
     <List isLoading={isLoading}>
-      {rooms.map((room: model.LightGroup) => {
+      {rooms.map((room: Room) => {
         const roomLights =
-          lights.filter((light: model.Light) => {
+          lights.filter((light: Light) => {
             return room.lights.includes(`${light.id}`);
           }) ?? [];
 
@@ -37,7 +37,7 @@ export default function Command() {
   );
 }
 
-function Room(props: { lights: model.Light[]; room: model.LightGroup; mutateLights: MutatePromise<model.Light[]> }) {
+function Room(props: { lights: Light[]; room: Room; mutateLights: MutatePromise<Light[]> }) {
   return (
     <List.Section title={props.room.name}>
       {props.lights.map((light) => (
@@ -47,7 +47,7 @@ function Room(props: { lights: model.Light[]; room: model.LightGroup; mutateLigh
   );
 }
 
-function Light(props: { light: model.Light; mutateLights: MutatePromise<model.Light[]> }) {
+function Light(props: { light: Light; mutateLights: MutatePromise<Light[]> }) {
   return (
     <List.Item
       title={props.light.name}
@@ -90,7 +90,7 @@ function Light(props: { light: model.Light; mutateLights: MutatePromise<model.Li
   );
 }
 
-function ToggleLightAction({ light, onToggle }: { light: model.Light; onToggle?: () => void }) {
+function ToggleLightAction({ light, onToggle }: { light: Light; onToggle?: () => void }) {
   return (
     <ActionPanel.Item
       title={light.state.on ? "Turn Off" : "Turn On"}
@@ -100,7 +100,7 @@ function ToggleLightAction({ light, onToggle }: { light: model.Light; onToggle?:
   );
 }
 
-function SetBrightnessAction(props: { light: model.Light; onSet: (percentage: number) => void }) {
+function SetBrightnessAction(props: { light: Light; onSet: (percentage: number) => void }) {
   return (
     <ActionPanel.Submenu
       title="Set Brightness"
@@ -118,7 +118,7 @@ function SetBrightnessAction(props: { light: model.Light; onSet: (percentage: nu
   );
 }
 
-function IncreaseBrightnessAction(props: { light: model.Light; onIncrease?: () => void }) {
+function IncreaseBrightnessAction(props: { light: Light; onIncrease?: () => void }) {
   return props.light.state.bri < BRIGHTNESS_MAX ? (
     <ActionPanel.Item
       title="Increase Brightness"
@@ -129,7 +129,7 @@ function IncreaseBrightnessAction(props: { light: model.Light; onIncrease?: () =
   ) : null;
 }
 
-function DecreaseBrightnessAction(props: { light: model.Light; onDecrease?: () => void }) {
+function DecreaseBrightnessAction(props: { light: Light; onDecrease?: () => void }) {
   return props.light.state.bri > BRIGHTNESS_MIN ? (
     <ActionPanel.Item
       title="Decrease Brightness"
@@ -140,7 +140,7 @@ function DecreaseBrightnessAction(props: { light: model.Light; onDecrease?: () =
   ) : null;
 }
 
-function SetColorAction(props: { light: model.Light; onSet: (color: CssColor) => void }) {
+function SetColorAction(props: { light: Light; onSet: (color: CssColor) => void }) {
   return (
     <ActionPanel.Submenu title="Set Color" icon={Icon.Swatch} shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}>
       {COLORS.map((color) => (
@@ -166,7 +166,7 @@ function RefreshAction(props: { onRefresh: () => void }) {
   );
 }
 
-async function handleToggle(light: model.Light, mutateHueState: MutatePromise<model.Light[]>) {
+async function handleToggle(light: Light, mutateHueState: MutatePromise<Light[]>) {
   const toast = await showToast(Style.Animated, light.state.on ? "Turning light off" : "Turning light on");
 
   try {
@@ -185,7 +185,7 @@ async function handleToggle(light: model.Light, mutateHueState: MutatePromise<mo
   }
 }
 
-async function handleIncreaseBrightness(light: model.Light, mutateHueState: MutatePromise<model.Light[]>) {
+async function handleIncreaseBrightness(light: Light, mutateHueState: MutatePromise<Light[]>) {
   const toast = await showToast(Style.Animated, "Increasing brightness");
 
   try {
@@ -206,7 +206,7 @@ async function handleIncreaseBrightness(light: model.Light, mutateHueState: Muta
   }
 }
 
-async function handleDecreaseBrightness(light: model.Light, mutateHueState: MutatePromise<model.Light[]>) {
+async function handleDecreaseBrightness(light: Light, mutateHueState: MutatePromise<Light[]>) {
   const toast = await showToast(Style.Animated, "Increasing brightness");
 
   try {
@@ -228,8 +228,8 @@ async function handleDecreaseBrightness(light: model.Light, mutateHueState: Muta
 }
 
 async function handleSetBrightness(
-  light: model.Light,
-  mutateHueState: MutatePromise<model.Light[]>,
+  light: Light,
+  mutateHueState: MutatePromise<Light[]>,
   percentage: number
 ) {
   const toast = await showToast(Style.Animated, "Setting brightness");
@@ -251,7 +251,7 @@ async function handleSetBrightness(
   }
 }
 
-async function handleSetColor(light: model.Light, mutateHueState: MutatePromise<model.Light[]>, color: CssColor) {
+async function handleSetColor(light: Light, mutateHueState: MutatePromise<Light[]>, color: CssColor) {
   const toast = await showToast(Style.Animated, "Setting color");
 
   try {
