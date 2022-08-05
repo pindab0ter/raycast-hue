@@ -16,32 +16,39 @@ export const BRIGHTNESS_MIN = 1;
 
 let _api: Api;
 
-// TODO: Move from objects to arrays
-type HueState = {
+export type HueState = {
   lights: model.Light[];
   groups: model.Group[];
   scenes: model.Scene[];
 };
 
-export const useHue = () => useCachedPromise<() => Promise<HueState>>(
-  async () => {
-    const api = await getAuthenticatedApi();
-    const lights = await api.lights.getAll();
-    const groups = await api.groups.getAll();
-    const scenes = await api.scenes.getAll();
+export function useHue() {
+  const { data, isLoading, mutate } = useCachedPromise<() => Promise<HueState>>(
+    async () => {
+      const api = await getAuthenticatedApi();
+      const lights = await api.lights.getAll();
+      const groups = await api.groups.getAll();
+      const scenes = await api.scenes.getAll();
 
-    return {
-      lights: lights.map((light) => light["data"] as model.Light).filter((light) => light != null),
-      groups: groups.map((group) => group["data"] as model.Group).filter((group) => group != null),
-      scenes: scenes.map((scene) => scene["data"] as model.Scene).filter((scene) => scene != null),
-    };
-  },
-  [],
-  {
-    keepPreviousData: true,
-    initialData: { lights: [], groups: [], scenes: [] },
+      return {
+        lights: lights.map((light) => light["data"] as model.Light).filter((light) => light != null),
+        groups: groups.map((group) => group["data"] as model.Group).filter((group) => group != null),
+        scenes: scenes.map((scene) => scene["data"] as model.Scene).filter((scene) => scene != null),
+      };
+    },
+    [],
+    {
+      keepPreviousData: true,
+      initialData: { lights: [], groups: [], scenes: [] },
+    }
+  );
+
+  return {
+    hueState: data,
+    isLoadingHueState: isLoading,
+    mutateHueState: mutate,
   }
-);
+}
 
 export async function getAuthenticatedApi(): Promise<Api> {
   if (_api) return _api;

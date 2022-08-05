@@ -7,6 +7,7 @@ import {
   calcDecreasedBrightness,
   calcIncreasedBrightness,
   decreaseBrightness,
+  HueState,
   increaseBrightness,
   setBrightness,
   setColor,
@@ -18,74 +19,91 @@ import { Light } from "@peter-murray/hue-bridge-model/dist/esm/model/Light";
 import { mutate } from "swr";
 import { model } from "@peter-murray/hue-bridge-model";
 import LightGroup from "node-hue-api/lib/model/groups/LightGroup";
+import { MutatePromise } from "@raycast/utils";
 import Style = Toast.Style;
 
 export default function Command() {
-  const { isLoading, data, mutate, revalidate } = useHue();
+  const { isLoadingHueState, hueState, mutateHueState } = useHue();
 
-  const rooms = data.groups.filter((group) => group.type == "Room") as unknown as LightGroup[];
-
-  function Room({ room }: { room: model.LightGroup }) {
-    const roomLights = data.lights.filter((light: model.Light) => {
-      return room.lights.includes(`${light.id}`);
-    });
-
-    return (
-      <List.Section key={room.id} title={room.name}>
-        {roomLights.map((light) => (
-          <Light light={light} />
-        ))}
-      </List.Section>
-    );
+  if (hueState === undefined) {
+    return <List isLoading={true} />;
   }
 
-  function Light({ light }: { light: model.Light }) {
-    return (
-      <List.Item
-        key={light.id}
-        title={light.name}
-        icon={getLightIcon(light)}
-        actions={
-          <ActionPanel>
-            <ToggleLightAction light={light} onToggle={() => handleToggle(light)} />
-          </ActionPanel>
-        }
-      />
-    );
-  }
+  const rooms = hueState?.groups.filter((group) => group.type == "Room") as unknown as LightGroup[];
 
-  async function handleToggle(light: Light) {
-    const toast = await showToast(Style.Animated, light.state.on ? "Turning light off" : "Turning light on");
-
-    try {
-      // TODO: Fix crawl up when toggling
-      const newLights = [...data.lights];
-      newLights[newLights.indexOf(light)] = { ...light, state: { ...light.state, on: !light.state.on } };
-      await mutate({ ...data, lights: newLights });
-
-      mutate()
-
-      await toggleLight(light);
-
-      revalidate();
-
-      toast.style = Style.Success;
-      toast.title = light.state.on ? "Turned light off" : "Turned light on";
-    } catch (e) {
-      toast.style = Style.Failure;
-      toast.title = light.state.on ? "Failed turning light off" : "Failed turning light on";
-      toast.message = e instanceof Error ? e.message : undefined;
-    }
-  }
-
-  // TODO: Figure out why this causes 'unique "key" prop' warnings.
   return (
-    <List isLoading={isLoading}>
-      {rooms.map((group) => (
-        <Room room={group} />
-      ))}
+    <List isLoading={isLoadingHueState}>
+      {rooms.map((room: LightGroup) => {
+        const lights =
+          hueState?.lights.filter((light: model.Light) => {
+            return room.lights.includes(`${light.id}`);
+          }) ?? [];
+
+        return <Room key={room.id} state={hueState} mutateHueState={mutateHueState} room={room} lights={lights} />;
+      })}
     </List>
   );
+}
+
+function Room(props: { state: HueState; mutateHueState: MutatePromise<HueState | undefined>; room: LightGroup; lights: model.Light[] }) {
+  return (
+    <List.Section title={props.room.name}>
+      {props.lights.map((light) => (
+        <Light
+          key={light.id}
+          room={props.room}
+          light={light}
+          handleToggle={() => handleToggle(props.state, props.mutateHueState, props.room, light)}
+        />
+      ))}
+    </List.Section>
+  );
+}
+
+function Light(props: { room: LightGroup; light: model.Light; handleToggle: () => void }) {
+  return (
+    <List.Item
+      title={props.light.name}
+      icon={getLightIcon(props.light)}
+      actions={
+        <ActionPanel>
+          <ToggleLightAction light={props.light} onToggle={props.handleToggle} />
+        </ActionPanel>
+      }
+    />
+  );
+}
+
+async function handleToggle(
+  hueState: HueState,
+  mutateHueState: MutatePromise<HueState | undefined>,
+  room: LightGroup,
+  light: model.Light
+) {
+  const toast = await showToast(Style.Animated, light.state.on ? "Turning light off" : "Turning light on");
+
+  try {
+    const newLights = [...hueState.lights];
+
+    await mutateHueState(toggleLight(light), {
+      optimisticUpdate(data) {
+        if (data === undefined) {
+          return data;
+        }
+        return {
+          ...data,
+          lights: data?.lights?.map((x) => (x.id === light.id ? { ...x, state: { ... x.state, on: !light.state.on} } : x)),
+        };
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = light.state.on ? "Turned light off" : "Turned light on";
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = light.state.on ? "Failed turning light off" : "Failed turning light on";
+    toast.message = e instanceof Error ? e.message : undefined;
+  }
 }
 
 function LightList() {
