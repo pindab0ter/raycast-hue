@@ -2,6 +2,12 @@
 // https://developers.meethue.com/develop/hue-api/
 
 export type id = string | number;
+export type XY = [number, number];
+
+export interface CssColor {
+  name: string;
+  value: string;
+}
 
 export interface LightState {
   on: boolean;

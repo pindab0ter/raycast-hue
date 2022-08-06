@@ -1,5 +1,5 @@
 import { assign, createMachine } from "xstate";
-import { BRIDGE_IP_ADDRESS_KEY, BRIDGE_USERNAME_KEY, discoverBridge, linkWithBridge } from "./hue";
+import { discoverBridge, linkWithBridge } from "./hue";
 import { LocalStorage, Toast } from "@raycast/api";
 import {
   connectedMessage,
@@ -9,6 +9,7 @@ import {
   noBridgeFoundMessage,
 } from "./markdown";
 import { v3 } from "node-hue-api";
+import { BRIDGE_IP_ADDRESS_KEY, BRIDGE_USERNAME_KEY } from "./constants";
 import Style = Toast.Style;
 
 export interface HueContext {

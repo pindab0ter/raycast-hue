@@ -4,19 +4,17 @@ import { LocalStorage } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
 import { Group, Light, Scene } from "./types";
 import { hexToXy } from "./colors";
-
-const APP_NAME = "raycast_hue_extension";
-export const BRIDGE_IP_ADDRESS_KEY = "bridgeIpAddress";
-export const BRIDGE_USERNAME_KEY = "bridgeUsername";
-
-export const BRIGHTNESSES = [1].concat(Array.from(Array(10).keys()).map((i) => i * 10 + 10)).reverse();
-// TODO: Replace with lookup table so that each step corresponds to an 10% value increment and use setBrightness instead of increase/decrease
-const BRIGHTNESS_STEP = 25.4;
-export const BRIGHTNESS_MAX = 254;
-export const BRIGHTNESS_MIN = 1;
-const COLOR_TEMPERATURE_STEP = (500.0 - 153.0) / 10.0;
-export const COLOR_TEMP_MAX = 500;
-export const COLOR_TEMP_MIN = 153;
+import {
+  APP_NAME,
+  BRIDGE_IP_ADDRESS_KEY,
+  BRIDGE_USERNAME_KEY,
+  BRIGHTNESS_MAX,
+  BRIGHTNESS_MIN,
+  BRIGHTNESS_STEP,
+  COLOR_TEMP_MAX,
+  COLOR_TEMP_MIN,
+  COLOR_TEMPERATURE_STEP,
+} from "./constants";
 
 let _api: Api;
 

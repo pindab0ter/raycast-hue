@@ -1,15 +1,10 @@
 import { ActionPanel, Icon, List, Toast } from "@raycast/api";
-import { COLORS, hexToXy, CssColor } from "./lib/colors";
+import { hexToXy } from "./lib/colors";
 import {
-  BRIGHTNESS_MAX,
-  BRIGHTNESS_MIN,
-  BRIGHTNESSES,
   calcDecreasedBrightness,
   calcDecreasedColorTemperature,
   calcIncreasedBrightness,
   calcIncreasedColorTemperature,
-  COLOR_TEMP_MAX,
-  COLOR_TEMP_MIN,
   decreaseBrightness,
   decreaseColorTemperature,
   increaseBrightness,
@@ -21,7 +16,8 @@ import {
 } from "./lib/hue";
 import { getIconForColor, getLightIcon } from "./lib/utils";
 import { MutatePromise } from "@raycast/utils";
-import { Light, Room } from "./lib/types";
+import { CssColor, Light, Room } from "./lib/types";
+import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEMP_MIN, COLORS } from "./lib/constants";
 import Style = Toast.Style;
 
 export default function Command() {
