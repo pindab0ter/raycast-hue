@@ -144,7 +144,9 @@ export const COLORS: CssColor[] = [
 
 export function hexToXy(color: string) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
-  const [red, green, blue] = result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : [0, 0, 0];
+  const [red, green, blue] = result
+    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
+    : [0, 0, 0];
   // const [red, green, blue] = hexToRgb(color);
   return rgbToCie(red, green, blue);
 }
@@ -154,10 +156,24 @@ export function getRgbFrom(lightState: LightState): string {
     case "xy":
       return cieToRgb(lightState.xy, lightState.bri);
     case "ct":
-      return ctToRgb(lightState.ct);
+      return ctToRgb(lightState.ct, lightState.bri);
     default:
-      return environment.theme == "light" ? "rgb(255, 255, 255)" : "rgb(0, 0, 0)";
+      return environment.theme == "dark"
+        ? `rgb(${logShadeRgb(255, 255, 255, -(1 - lightState.bri / 254))})`
+        : `rgb(${logShadeRgb(0, 0, 0, 1 - lightState.bri / 254)})`;
   }
+}
+
+// Modified from: https://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
+// Could be simplified further
+function logShadeRgb(r: number, g: number, b: number, percentage: number) {
+  const multiplier = percentage < 0 ? 0 : percentage * 255 ** 2;
+  const signedPercentage = percentage < 0 ? 1 + percentage : 1 - percentage;
+
+  const R = Math.round((signedPercentage * r ** 2 + multiplier) ** 0.5);
+  const G = Math.round((signedPercentage * g ** 2 + multiplier) ** 0.5);
+  const B = Math.round((signedPercentage * b ** 2 + multiplier) ** 0.5);
+  return [R, G, B];
 }
 
 // region Modified diyHueUI color conversion
@@ -221,9 +237,10 @@ export function cieToRgb(xy: XY, brightness: number) {
 /**
  * Converts a CT to an RGB string
  * @param {number} mireds Philips Hue CT value
+ * @param {number} brightness Brightness of the light (1-254)
  * @returns {string} RGB string
  */
-export function ctToRgb(mireds: number): string {
+export function ctToRgb(mireds: number, brightness: number): string {
   const hecTemp = 20000.0 / mireds;
 
   let red: number, green: number, blue: number;
@@ -238,11 +255,9 @@ export function ctToRgb(mireds: number): string {
     blue = 255;
   }
 
-  red = red > 255 ? 255 : red;
-  green = green > 255 ? 255 : green;
-  blue = blue > 255 ? 255 : blue;
+  const [shadedRed, shadedGreen, shadedBlue] = logShadeRgb(red, green, blue, -(1 - brightness / 254));
 
-  return `rgb(${Math.floor(red)},${Math.floor(green)},${Math.floor(blue)})`;
+  return `rgb(${shadedRed},${shadedGreen},${shadedBlue})`;
 }
 
 /**
