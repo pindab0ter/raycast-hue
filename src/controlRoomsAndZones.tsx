@@ -140,7 +140,7 @@ function SetSceneAction(props: { group: Group; scenes: Scene[]; onSetScene: (sce
 //     <ActionPanel.Item
 //       title="Increase Brightness"
 //       shortcut={{ modifiers: ["cmd", "shift"], key: "arrowUp" }}
-//       icon={Icon.PlusCircle}
+//       icon={Icon.Plus}
 //       onAction={props.onIncrease}
 //     />
 //   ) : null;
@@ -151,7 +151,7 @@ function SetSceneAction(props: { group: Group; scenes: Scene[]; onSetScene: (sce
 //     <ActionPanel.Item
 //       title="Decrease Brightness"
 //       shortcut={{ modifiers: ["cmd", "shift"], key: "arrowDown" }}
-//       icon={Icon.MinusCircle}
+//       icon={Icon.Minus}
 //       onAction={props.onDecrease}
 //     />
 //   ) : null;
@@ -177,7 +177,7 @@ function SetSceneAction(props: { group: Group; scenes: Scene[]; onSetScene: (sce
 //     <ActionPanel.Item
 //       title="Increase Color Temperature"
 //       shortcut={{ modifiers: ["cmd", "shift"], key: "arrowRight" }}
-//       icon={Icon.PlusCircle}
+//       icon={Icon.Plus}
 //       onAction={props.onIncrease}
 //     />
 //   ) : null;
@@ -188,7 +188,7 @@ function SetSceneAction(props: { group: Group; scenes: Scene[]; onSetScene: (sce
 //     <ActionPanel.Item
 //       title="Decrease Color Temperature"
 //       shortcut={{ modifiers: ["cmd", "shift"], key: "arrowLeft" }}
-//       icon={Icon.MinusCircle}
+//       icon={Icon.Minus}
 //       onAction={props.onDecrease}
 //     />
 //   ) : null;

@@ -62,9 +62,6 @@ function Light(props: { light: Light; mutateLights: MutatePromise<Light[]> }) {
         <ActionPanel>
           <ActionPanel.Section>
             <ToggleLightAction light={props.light} onToggle={() => handleToggle(props.light, props.mutateLights)} />
-          </ActionPanel.Section>
-
-          <ActionPanel.Section>
             <SetBrightnessAction
               light={props.light}
               onSet={(percentage: number) => handleSetBrightness(props.light, props.mutateLights, percentage)}
@@ -79,6 +76,7 @@ function Light(props: { light: Light; mutateLights: MutatePromise<Light[]> }) {
               onDecrease={() => handleDecreaseBrightness(props.light, props.mutateLights)}
             />
           </ActionPanel.Section>
+
           <ActionPanel.Section>
             {props.light.state.colormode == "xy" && (
               <SetColorAction
@@ -143,7 +141,7 @@ function IncreaseBrightnessAction(props: { light: Light; onIncrease?: () => void
     <ActionPanel.Item
       title="Increase Brightness"
       shortcut={{ modifiers: ["cmd", "shift"], key: "arrowUp" }}
-      icon={Icon.PlusCircle}
+      icon={Icon.Plus}
       onAction={props.onIncrease}
     />
   ) : null;
@@ -154,7 +152,7 @@ function DecreaseBrightnessAction(props: { light: Light; onDecrease?: () => void
     <ActionPanel.Item
       title="Decrease Brightness"
       shortcut={{ modifiers: ["cmd", "shift"], key: "arrowDown" }}
-      icon={Icon.MinusCircle}
+      icon={Icon.Minus}
       onAction={props.onDecrease}
     />
   ) : null;
@@ -180,7 +178,7 @@ function IncreaseColorTemperatureAction(props: { light: Light; onIncrease?: () =
     <ActionPanel.Item
       title="Increase Color Temperature"
       shortcut={{ modifiers: ["cmd", "shift"], key: "arrowRight" }}
-      icon={Icon.PlusCircle}
+      icon={Icon.Plus}
       onAction={props.onIncrease}
     />
   ) : null;
@@ -191,7 +189,7 @@ function DecreaseColorTemperatureAction(props: { light: Light; onDecrease?: () =
     <ActionPanel.Item
       title="Decrease Color Temperature"
       shortcut={{ modifiers: ["cmd", "shift"], key: "arrowLeft" }}
-      icon={Icon.MinusCircle}
+      icon={Icon.Minus}
       onAction={props.onDecrease}
     />
   ) : null;
