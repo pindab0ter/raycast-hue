@@ -5,9 +5,9 @@ import {
   calcDecreasedColorTemperature,
   calcIncreasedBrightness,
   calcIncreasedColorTemperature,
-  decreaseBrightness,
+  decreaseLightBrightness,
   decreaseColorTemperature,
-  increaseBrightness,
+  increaseLightBrightness,
   increaseColorTemperature,
   setBrightness,
   setColor,
@@ -250,10 +250,10 @@ async function handleIncreaseBrightness(light: Light, mutateLights: MutatePromis
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateLights(increaseBrightness(light), {
+    await mutateLights(increaseLightBrightness(light), {
       optimisticUpdate(lights) {
         return lights?.map((it) =>
-          it.id === light.id ? { ...it, state: { ...it.state, on: true, bri: calcIncreasedBrightness(light) } } : it
+          it.id === light.id ? { ...it, state: { ...it.state, on: true, bri: calcIncreasedBrightness(light.state) } } : it
         );
       },
     });
@@ -273,10 +273,10 @@ async function handleDecreaseBrightness(light: Light, mutateLights: MutatePromis
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateLights(decreaseBrightness(light), {
+    await mutateLights(decreaseLightBrightness(light), {
       optimisticUpdate(lights) {
         return lights.map((it) =>
-          it.id === light.id ? { ...it, state: { ...it.state, on: true, bri: calcDecreasedBrightness(light) } } : it
+          it.id === light.id ? { ...it, state: { ...it.state, on: true, bri: calcDecreasedBrightness(light.state) } } : it
         );
       },
     });

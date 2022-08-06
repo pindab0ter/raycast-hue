@@ -2,7 +2,7 @@ import { discovery, v3 } from "node-hue-api";
 import { Api } from "node-hue-api/dist/esm/api/Api";
 import { LocalStorage } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
-import { Group, Light, Scene } from "./types";
+import { Group, Light, LightState, Scene } from "./types";
 import { hexToXy } from "./colors";
 import {
   APP_NAME,
@@ -147,24 +147,36 @@ export async function toggleLight(light: Light) {
   await api.lights.setLightState(light.id, { on: !light.state.on });
 }
 
-export async function increaseBrightness(light: Light) {
+export async function increaseLightBrightness(light: Light) {
   const api = await getAuthenticatedApi();
   const newLightState = new v3.model.lightStates.LightState().on().bri_inc(BRIGHTNESS_STEP);
   await api.lights.setLightState(light.id, newLightState);
 }
 
-export function calcIncreasedBrightness(light: Light) {
-  return Math.min(Math.max(BRIGHTNESS_MIN, light.state.bri + BRIGHTNESS_STEP), BRIGHTNESS_MAX);
+export async function increaseGroupBrightness(group: Group) {
+  const api = await getAuthenticatedApi();
+  const newLightState = new v3.model.lightStates.GroupLightState().on().bri_inc(BRIGHTNESS_STEP);
+  await api.groups.setGroupState(group.id, newLightState);
 }
 
-export async function decreaseBrightness(light: Light) {
+export function calcIncreasedBrightness(lightState: LightState) {
+  return Math.min(Math.max(BRIGHTNESS_MIN, lightState.bri + BRIGHTNESS_STEP), BRIGHTNESS_MAX);
+}
+
+export async function decreaseLightBrightness(light: Light) {
   const api = await getAuthenticatedApi();
   const newLightState = new v3.model.lightStates.LightState().on().bri_inc(-BRIGHTNESS_STEP);
   await api.lights.setLightState(light.id, newLightState);
 }
 
-export function calcDecreasedBrightness(light: Light) {
-  return Math.min(Math.max(BRIGHTNESS_MIN, light.state.bri - BRIGHTNESS_STEP), BRIGHTNESS_MAX);
+export async function decreaseGroupBrightness(group: Group) {
+  const api = await getAuthenticatedApi();
+  const newGroupState = new v3.model.lightStates.GroupLightState().on().bri_inc(-BRIGHTNESS_STEP);
+  await api.groups.setGroupState(group.id, newGroupState);
+}
+
+export function calcDecreasedBrightness(lightState: LightState) {
+  return Math.min(Math.max(BRIGHTNESS_MIN, lightState.bri - BRIGHTNESS_STEP), BRIGHTNESS_MAX);
 }
 
 export async function setBrightness(light: Light, percentage: number) {

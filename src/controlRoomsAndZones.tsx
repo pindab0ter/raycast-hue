@@ -1,9 +1,10 @@
 import { ActionPanel, Icon, List, Toast } from "@raycast/api";
-import { setScene, turnAllLightsOff, turnAllLightsOn, useHue } from "./lib/hue";
+import { calcDecreasedBrightness, calcIncreasedBrightness, decreaseGroupBrightness, increaseGroupBrightness, increaseLightBrightness, setScene, turnAllLightsOff, turnAllLightsOn, useHue } from "./lib/hue";
 import { MutatePromise } from "@raycast/utils";
 import { Group, Room, Scene } from "./lib/types";
 import { getLightIcon } from "./lib/utils";
 import Style = Toast.Style;
+import { BRIGHTNESS_MAX, BRIGHTNESS_MIN } from "./lib/constants";
 
 export default function Command() {
   const { isLoading, groups, mutateGroups, scenes } = useHue();
@@ -54,20 +55,20 @@ function Group(props: { group: Group; mutateGroups: MutatePromise<Group[]>; scen
             />
           )}
 
-          {/*<ActionPanel.Section>*/}
+          <ActionPanel.Section>
           {/*  <SetBrightnessAction*/}
           {/*    group={props.group}*/}
           {/*    onSet={(percentage: number) => handleSetBrightness(props.group, props.mutateLights, percentage)}*/}
           {/*  />*/}
-          {/*  <IncreaseBrightnessAction*/}
-          {/*    group={props.group}*/}
-          {/*    onIncrease={() => handleIncreaseBrightness(props.group, props.mutateLights)}*/}
-          {/*  />*/}
-          {/*  <DecreaseBrightnessAction*/}
-          {/*    group={props.group}*/}
-          {/*    onDecrease={() => handleDecreaseBrightness(props.group, props.mutateLights)}*/}
-          {/*  />*/}
-          {/*</ActionPanel.Section>*/}
+            <IncreaseBrightnessAction
+              group={props.group}
+              onIncrease={() => handleIncreaseBrightness(props.group, props.mutateGroups)}
+            />
+            <DecreaseBrightnessAction
+              group={props.group}
+              onDecrease={() => handleDecreaseBrightness(props.group, props.mutateGroups)}
+            />
+          </ActionPanel.Section>
           {/*<ActionPanel.Section>*/}
           {/*  {props.group.state.colormode == "xy" && (*/}
           {/*    <SetColorAction*/}
@@ -133,29 +134,29 @@ function SetSceneAction(props: { group: Group; scenes: Scene[]; onSetScene: (sce
 //     </ActionPanel.Submenu>
 //   );
 // }
-//
-// function IncreaseBrightnessAction(props: { group: Light; onIncrease?: () => void }) {
-//   return props.group.state.bri < BRIGHTNESS_MAX ? (
-//     <ActionPanel.Item
-//       title="Increase Brightness"
-//       shortcut={{ modifiers: ["cmd", "shift"], key: "arrowUp" }}
-//       icon={Icon.Plus}
-//       onAction={props.onIncrease}
-//     />
-//   ) : null;
-// }
-//
-// function DecreaseBrightnessAction(props: { group: Light; onDecrease?: () => void }) {
-//   return props.group.state.bri > BRIGHTNESS_MIN ? (
-//     <ActionPanel.Item
-//       title="Decrease Brightness"
-//       shortcut={{ modifiers: ["cmd", "shift"], key: "arrowDown" }}
-//       icon={Icon.Minus}
-//       onAction={props.onDecrease}
-//     />
-//   ) : null;
-// }
-//
+
+function IncreaseBrightnessAction(props: { group: Group; onIncrease?: () => void }) {
+  return props.group.action.bri < BRIGHTNESS_MAX ? (
+    <ActionPanel.Item
+      title="Increase Brightness"
+      shortcut={{ modifiers: ["cmd", "shift"], key: "arrowUp" }}
+      icon={Icon.Plus}
+      onAction={props.onIncrease}
+    />
+  ) : null;
+}
+
+function DecreaseBrightnessAction(props: { group: Group; onDecrease?: () => void }) {
+  return props.group.action.bri > BRIGHTNESS_MIN ? (
+    <ActionPanel.Item
+      title="Decrease Brightness"
+      shortcut={{ modifiers: ["cmd", "shift"], key: "arrowDown" }}
+      icon={Icon.Minus}
+      onAction={props.onDecrease}
+    />
+  ) : null;
+}
+
 // function SetColorAction(props: { group: Light; onSet: (color: CssColor) => void }) {
 //   return (
 //     <ActionPanel.Submenu title="Set Color" icon={Icon.Swatch} shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}>
@@ -271,7 +272,7 @@ async function handleSetScene(group: Group, scene: Scene, mutateGroups: MutatePr
 //   try {
 //     await mutateGroups(setBrightness(group, brightness), {
 //       optimisticUpdate(rooms) {
-//         return rooms.map((it) => (it.id === group.id ? { ...it, stat: { ...it.state, on: true, bri: brightness } } : it));
+//         return rooms.map((it) => (it.id === group.id ? { ...it, state: { ...it.state, on: true, bri: brightness } } : it));
 //       },
 //     });
 //
@@ -286,52 +287,52 @@ async function handleSetScene(group: Group, scene: Scene, mutateGroups: MutatePr
 //   }
 // }
 //
-// async function handleIncreaseBrightness(group: Light, mutateGroups: MutatePromise<Light[]>) {
-//   const toast = new Toast({ title: "" });
-//
-//   try {
-//     await mutateGroups(increaseBrightness(group), {
-//       optimisticUpdate(rooms) {
-//         return rooms?.map((it) =>
-//           it.id === group.id ? { ...it, stat: { ...it.state, on: true, bri: calcIncreasedBrightness(group) } } : it
-//         );
-//       },
-//     });
-//
-//     toast.style = Style.Success;
-//     toast.title = "Increased brightness";
-//     await toast.show();
-//   } catch (e) {
-//     toast.style = Style.Failure;
-//     toast.title = "Failed increasing brightness";
-//     toast.message = e instanceof Error ? e.message : undefined;
-//     await toast.show();
-//   }
-// }
-//
-// async function handleDecreaseBrightness(group: Light, mutateGroups: MutatePromise<Light[]>) {
-//   const toast = new Toast({ title: "" });
-//
-//   try {
-//     await mutateGroups(decreaseBrightness(group), {
-//       optimisticUpdate(rooms) {
-//         return rooms.map((it) =>
-//           it.id === group.id ? { ...it, stat: { ...it.state, on: true, bri: calcDecreasedBrightness(group) } } : it
-//         );
-//       },
-//     });
-//
-//     toast.style = Style.Success;
-//     toast.title = "Decreased brightness";
-//     await toast.show();
-//   } catch (e) {
-//     toast.style = Style.Failure;
-//     toast.title = "Failed decreasing brightness";
-//     toast.message = e instanceof Error ? e.message : undefined;
-//     await toast.show();
-//   }
-// }
-//
+async function handleIncreaseBrightness(group: Group, mutateGroups: MutatePromise<Group[]>) {
+  const toast = new Toast({ title: "" });
+
+  try {
+    await mutateGroups(increaseGroupBrightness(group), {
+      optimisticUpdate(rooms) {
+        return rooms?.map((it) =>
+          it.id === group.id ? { ...it, action: { ...it.action, on: true, bri: calcIncreasedBrightness(group.action) } } : it
+        );
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = "Increased brightness";
+    await toast.show();
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed increasing brightness";
+    toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
+  }
+}
+
+async function handleDecreaseBrightness(group: Group, mutateGroups: MutatePromise<Group[]>) {
+  const toast = new Toast({ title: "" });
+
+  try {
+    await mutateGroups(decreaseGroupBrightness(group), {
+      optimisticUpdate(rooms) {
+        return rooms.map((it) =>
+          it.id === group.id ? { ...it, action: { ...it.action, on: true, bri: calcDecreasedBrightness(group.action) } } : it
+        );
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = "Decreased brightness";
+    await toast.show();
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed decreasing brightness";
+    toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
+  }
+}
+
 // async function handleSetColor(group: Light, mutateGroups: MutatePromise<Light[]>, color: CssColor) {
 //   const toast = new Toast({ title: "" });
 //
@@ -339,7 +340,7 @@ async function handleSetScene(group: Group, scene: Scene, mutateGroups: MutatePr
 //     await mutateGroups(setColor(group, color.value), {
 //       optimisticUpdate(rooms) {
 //         return rooms.map((it) =>
-//           it.id === group.id ? { ...it, stat: { ...it.state, on: true, xy: hexToXy(color.value) } } : it
+//           it.id === group.id ? { ...it, state: { ...it.state, on: true, xy: hexToXy(color.value) } } : it
 //         );
 //       },
 //     });
@@ -362,7 +363,7 @@ async function handleSetScene(group: Group, scene: Scene, mutateGroups: MutatePr
 //     await mutateGroups(increaseColorTemperature(group), {
 //       optimisticUpdate(rooms) {
 //         return rooms?.map((it) =>
-//           it.id === group.id ? { ...it, stat: { ...it.state, ct: calcIncreasedColorTemperature(group) } } : it
+//           it.id === group.id ? { ...it, state: { ...it.state, ct: calcIncreasedColorTemperature(group) } } : it
 //         );
 //       },
 //     });
@@ -387,7 +388,7 @@ async function handleSetScene(group: Group, scene: Scene, mutateGroups: MutatePr
 //     await mutateGroups(decreaseColorTemperature(group), {
 //       optimisticUpdate(rooms) {
 //         return rooms.map((it) =>
-//           it.id === group.id ? { ...it, stat: { ...it.state, ct: calcDecreasedColorTemperature(group) } } : it
+//           it.id === group.id ? { ...it, state: { ...it.state, ct: calcDecreasedColorTemperature(group) } } : it
 //         );
 //       },
 //     });
