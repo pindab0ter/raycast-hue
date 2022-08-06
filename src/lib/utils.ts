@@ -1,4 +1,4 @@
-import { Color, Icon, Image, showToast, Toast } from "@raycast/api";
+import { Color, environment, Icon, Image, showToast, Toast } from "@raycast/api";
 import { CssColor, getHexFrom } from "./colors";
 import { Light, LightState } from "./types";
 import { getProgressIcon } from "@raycast/utils";
@@ -45,6 +45,7 @@ export function getLightIcon(lightState: LightState) {
 
   if (lightState.colormode === "ct") {
     // TODO: Convert from CT to RGB
+    return getProgressIcon(progress, environment.theme == "dark" ? "#fff" : "#000");
   }
 
   return getProgressIcon(progress);
