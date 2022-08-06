@@ -99,7 +99,6 @@ function Light(props: { light: Light; mutateLights: MutatePromise<Light[]> }) {
           </ActionPanel.Section>
 
           <ActionPanel.Section>
-            {/* TODO: Fix this only updating the selected light for some reason */}
             <RefreshAction onRefresh={() => props.mutateLights()} />
           </ActionPanel.Section>
         </ActionPanel>

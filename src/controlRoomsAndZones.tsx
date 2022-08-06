@@ -59,7 +59,6 @@ function Group(props: { group: Group; mutateGroups: MutatePromise<Group[]>; scen
           {/*    group={props.group}*/}
           {/*    onSet={(percentage: number) => handleSetBrightness(props.group, props.mutateLights, percentage)}*/}
           {/*  />*/}
-          {/*  /!* TODO: Handle holding the key combo properly *!/*/}
           {/*  <IncreaseBrightnessAction*/}
           {/*    group={props.group}*/}
           {/*    onIncrease={() => handleIncreaseBrightness(props.group, props.mutateLights)}*/}

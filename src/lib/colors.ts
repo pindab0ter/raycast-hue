@@ -186,6 +186,7 @@ type XY = [number, number];
  * @param {number} brightness
  * @returns {string}
  */
+// TODO: Fix not handling some colors well (e.g. 'Maroon' turns purple)
 export function cieToRgb(xy: XY, brightness: number) {
   //Set to maximum brightness if no custom value was given (Not the slick ECMAScript 6 way for compatibility reasons)
   if (brightness === undefined) {
