@@ -1,16 +1,16 @@
 import { discovery, v3 } from "node-hue-api";
 import { Api } from "node-hue-api/dist/esm/api/Api";
-import { convertToXY } from "./colors";
 import { LocalStorage } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
 import { Group, Light, Scene } from "./types";
+import { hexToXy } from "./colors";
 
 const APP_NAME = "raycast_hue_extension";
 export const BRIDGE_IP_ADDRESS_KEY = "bridgeIpAddress";
 export const BRIDGE_USERNAME_KEY = "bridgeUsername";
 
 export const BRIGHTNESSES = [1].concat(Array.from(Array(10).keys()).map((i) => i * 10 + 10)).reverse();
-// TODO: Change into lookup table so that each step corresponds to a 10% value and use setBrightness instead of increase/decrease
+// TODO: Replace with lookup table so that each step corresponds to an 10% value increment and use setBrightness instead of increase/decrease
 const BRIGHTNESS_STEP = 25.4;
 export const BRIGHTNESS_MAX = 254;
 export const BRIGHTNESS_MIN = 1;
@@ -177,7 +177,7 @@ export async function setBrightness(light: Light, percentage: number) {
 
 export async function setColor(light: Light, color: string) {
   const api = await getAuthenticatedApi();
-  const xy = convertToXY(color);
+  const xy = hexToXy(color);
   const newLightState = new v3.model.lightStates.LightState().on().xy(xy);
   await api.lights.setLightState(light.id, newLightState);
 }

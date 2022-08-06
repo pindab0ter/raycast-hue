@@ -1,5 +1,5 @@
 import { ActionPanel, Icon, List, Toast } from "@raycast/api";
-import { COLORS, convertToXY, CssColor } from "./lib/colors";
+import { COLORS, hexToXy, CssColor } from "./lib/colors";
 import {
   BRIGHTNESS_MAX,
   BRIGHTNESS_MIN,
@@ -304,7 +304,7 @@ async function handleSetColor(light: Light, mutateLights: MutatePromise<Light[]>
     await mutateLights(setColor(light, color.value), {
       optimisticUpdate(lights) {
         return lights.map((it) =>
-          it.id === light.id ? { ...it, state: { ...it.state, on: true, xy: convertToXY(color.value) } } : it
+          it.id === light.id ? { ...it, state: { ...it.state, on: true, xy: hexToXy(color.value) } } : it
         );
       },
     });

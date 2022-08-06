@@ -340,7 +340,7 @@ async function handleSetScene(group: Group, scene: Scene, mutateGroups: MutatePr
 //     await mutateGroups(setColor(group, color.value), {
 //       optimisticUpdate(rooms) {
 //         return rooms.map((it) =>
-//           it.id === group.id ? { ...it, stat: { ...it.state, on: true, xy: convertToXY(color.value) } } : it
+//           it.id === group.id ? { ...it, stat: { ...it.state, on: true, xy: hexToXy(color.value) } } : it
 //         );
 //       },
 //     });
