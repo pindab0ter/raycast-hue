@@ -10,12 +10,12 @@ import Style = Toast.Style;
 export default function SetScene() {
   const { isLoading, lightsError, groups, mutateGroups, scenes } = useHue();
 
-  if (lightsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
-  if (lightsError instanceof CouldNotConnectToHueBridgeError) return <BridgeNotFound />;
-
   const rooms = groups.filter((group) => group.type === "Room") as Group[];
   const entertainmentAreas = groups.filter((group) => group.type === "Entertainment") as Group[];
   const zones = groups.filter((group) => group.type === "Zone") as Group[];
+
+  if (lightsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
+  if (lightsError instanceof CouldNotConnectToHueBridgeError) return <BridgeNotFound />;
 
   const groupTypes = Array.of(rooms, entertainmentAreas, zones);
 

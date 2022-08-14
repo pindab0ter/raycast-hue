@@ -22,14 +22,14 @@ import Style = Toast.Style;
 export default function ControlLights() {
   const { isLoading, lights, mutateLights, lightsError, groups } = useHue();
 
-  if (lightsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
-  if (lightsError instanceof CouldNotConnectToHueBridgeError) return <BridgeNotFound />;
-
   const rooms = groups.filter((group: Group) => group.type === "Room") as Group[];
   const entertainmentAreas = groups.filter((group: Group) => group.type === "Entertainment") as Group[];
   const zones = groups.filter((group: Group) => group.type === "Zone") as Group[];
-
   const groupTypes = Array.of(rooms, entertainmentAreas, zones);
+
+  if (lightsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
+  if (lightsError instanceof CouldNotConnectToHueBridgeError) return <BridgeNotFound />;
+
 
   return (
     <List isLoading={isLoading}>

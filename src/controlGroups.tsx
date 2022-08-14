@@ -24,12 +24,12 @@ import Style = Toast.Style;
 export default function Command() {
   const { isLoading, groups, mutateGroups, groupsError, scenes } = useHue();
 
-  if (groupsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
-  if (groupsError instanceof CouldNotConnectToHueBridgeError) return <BridgeNotFound />;
-
   const rooms: Room[] = groups.filter((group: Group) => group.type == "Room") as Room[];
   const entertainmentAreas: Group[] = groups.filter((group: Group) => group.type == "Entertainment");
   const zones: Group[] = groups.filter((group: Group) => group.type == "Zone");
+
+  if (groupsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
+  if (groupsError instanceof CouldNotConnectToHueBridgeError) return <BridgeNotFound />;
 
   return (
     <List isLoading={isLoading}>
