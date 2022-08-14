@@ -28,8 +28,8 @@ export default function Command() {
   if (groupsError instanceof CouldNotConnectToHueBridgeError) return <FailedToConnect />;
 
   const rooms: Room[] = groups.filter((group) => group.type == "Room") as Room[];
-  const zones: Group[] = groups.filter((group) => group.type == "Zone");
   const entertainmentAreas: Group[] = groups.filter((group) => group.type == "Entertainment");
+  const zones: Group[] = groups.filter((group) => group.type == "Zone");
 
   return (
     <List isLoading={isLoading}>
@@ -38,14 +38,6 @@ export default function Command() {
           {rooms.map((room: Room) => {
             const roomScenes = scenes.filter((scene) => scene.group == room.id);
             return <Group key={room.id} group={room} mutateGroups={mutateGroups} scenes={roomScenes} />;
-          })}
-        </List.Section>
-      )}
-      {zones.length > 0 && (
-        <List.Section title="Zones">
-          {zones.map((zone: Group) => {
-            const zoneScenes = scenes.filter((scene) => scene.group == zone.id);
-            return <Group key={zone.id} group={zone} mutateGroups={mutateGroups} scenes={zoneScenes} />;
           })}
         </List.Section>
       )}
@@ -61,6 +53,14 @@ export default function Command() {
                 scenes={entertainmentAreaScenes}
               />
             );
+          })}
+        </List.Section>
+      )}
+      {zones.length > 0 && (
+        <List.Section title="Zones">
+          {zones.map((zone: Group) => {
+            const zoneScenes = scenes.filter((scene) => scene.group == zone.id);
+            return <Group key={zone.id} group={zone} mutateGroups={mutateGroups} scenes={zoneScenes} />;
           })}
         </List.Section>
       )}
