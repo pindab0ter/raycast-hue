@@ -1,6 +1,6 @@
 import { Icon, Image, showToast, Toast } from "@raycast/api";
-import { CssColor, getRgbFrom } from "./colors";
-import { LightState } from "./types";
+import { getRgbFrom } from "./colors";
+import { CssColor, LightState } from "./types";
 import { getProgressIcon } from "@raycast/utils";
 import Style = Toast.Style;
 
