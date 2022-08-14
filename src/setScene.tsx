@@ -12,7 +12,7 @@ import {
 } from "./lib/hue";
 import { getIconForColor, getLightIcon } from "./lib/utils";
 import { MutatePromise } from "@raycast/utils";
-import { CssColor, Group, Light } from "./lib/types";
+import { CssColor, Light, Room } from "./lib/types";
 import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEMP_MIN, COLORS } from "./lib/constants";
 import { CouldNotConnectToHueBridgeError, NoHueBridgeConfiguredError } from "./lib/errors";
 import NoHueBridgeConfigured from "./components/noHueBridgeConfigured";
@@ -22,33 +22,27 @@ import Style = Toast.Style;
 export default function ControlLights() {
   const { isLoading, lights, mutateLights, lightsError, groups } = useHue();
 
-  const rooms = groups.filter((group) => group.type === "Room") as Group[];
-  const entertainmentAreas = groups.filter((group) => group.type === "Entertainment") as Group[];
-  const zones = groups.filter((group) => group.type === "Zone") as Group[];
+  const rooms = groups.filter((group) => group.type == "Room") as Room[];
   if (lightsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
   if (lightsError instanceof CouldNotConnectToHueBridgeError) return <FailedToConnect />;
 
-  const groupTypes = Array.of(rooms, entertainmentAreas, zones);
-
   return (
     <List isLoading={isLoading}>
-      {groupTypes.map((groupType) => {
-        return groupType.map((group: Group) => {
-          const groupLights =
-            lights.filter((light: Light) => {
-              return group.lights.includes(`${light.id}`);
-            }) ?? [];
+      {rooms.map((room: Room) => {
+        const roomLights =
+          lights.filter((light: Light) => {
+            return room.lights.includes(`${light.id}`);
+          }) ?? [];
 
-          return <Group key={group.id} lights={groupLights} group={group} mutateLights={mutateLights} />;
-        });
+        return <Room key={room.id} lights={roomLights} room={room} mutateLights={mutateLights} />;
       })}
     </List>
   );
 }
 
-function Group(props: { lights: Light[]; group: Group; mutateLights: MutatePromise<Light[]> }) {
+function Room(props: { lights: Light[]; room: Room; mutateLights: MutatePromise<Light[]> }) {
   return (
-    <List.Section key={`${props.group.type}.${props.group.name}`} title={props.group.name} subtitle={props.group.type}>
+    <List.Section title={props.room.name}>
       {props.lights.map((light) => (
         <Light key={light.id} light={light} mutateLights={props.mutateLights} />
       ))}
@@ -333,9 +327,7 @@ async function handleIncreaseColorTemperature(light: Light, mutateLights: Mutate
     await mutateLights(adjustColorTemperature(light, "increase"), {
       optimisticUpdate(lights) {
         return lights?.map((it) =>
-          it.id === light.id
-            ? { ...it, state: { ...it.state, ct: calculateAdjustedColorTemperature(light, "increase") } }
-            : it
+          it.id === light.id ? { ...it, state: { ...it.state, ct: calculateAdjustedColorTemperature(light, "increase") } } : it
         );
       },
     });
@@ -358,9 +350,7 @@ async function handleDecreaseColorTemperature(light: Light, mutateLights: Mutate
     await mutateLights(adjustColorTemperature(light, "decrease"), {
       optimisticUpdate(lights) {
         return lights.map((it) =>
-          it.id === light.id
-            ? { ...it, state: { ...it.state, ct: calculateAdjustedColorTemperature(light, "decrease") } }
-            : it
+          it.id === light.id ? { ...it, state: { ...it.state, ct: calculateAdjustedColorTemperature(light, "decrease") } } : it
         );
       },
     });
