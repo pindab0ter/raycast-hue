@@ -18,8 +18,19 @@
       "name": "controlGroups",
       "title": "Control Groups",
       "subtitle": "Hue",
-      "keywords": ["room", "zone", "entertainment"],
+      "keywords": [
+        "room",
+        "zone",
+        "entertainment"
+      ],
       "description": "List, search and control rooms, zones and entertainment areas",
+      "mode": "view"
+    },
+    {
+      "name": "setScene",
+      "title": "Set Scene",
+      "subtitle": "Hue",
+      "description": "List, search and set scenes",
       "mode": "view"
     },
     {
