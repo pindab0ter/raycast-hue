@@ -11,7 +11,17 @@ export const noBridgeConfiguredMessage = `
 
 ![Not Found](${connectImage})
 
-Please use the Manage Hue Bridge command to link your Hue Bridge.
+Please use the ‘Manage Hue Bridge’ command to link your Hue Bridge.
+`;
+
+export const bridgeNotFoundMessage = `
+# Could not find the Hue Bridge
+
+![Failure](${failureImage})
+
+Please check your network connection and make sure you are connected to the same network as your Hue Bridge.
+
+You can remove your saved Hue Bridge from the ‘Manage Hue Bridge’ command.
 `;
 
 export const noBridgeFoundMessage = `

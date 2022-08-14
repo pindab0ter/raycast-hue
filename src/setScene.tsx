@@ -4,14 +4,14 @@ import { MutatePromise } from "@raycast/utils";
 import { Group, Scene } from "./lib/types";
 import { CouldNotConnectToHueBridgeError, NoHueBridgeConfiguredError } from "./lib/errors";
 import NoHueBridgeConfigured from "./components/noHueBridgeConfigured";
-import FailedToConnect from "./components/failedToConnect";
+import BridgeNotFound from "./components/bridgeNotFound";
 import Style = Toast.Style;
 
 export default function SetScene() {
   const { isLoading, lightsError, groups, mutateGroups, scenes } = useHue();
 
   if (lightsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
-  if (lightsError instanceof CouldNotConnectToHueBridgeError) return <FailedToConnect />;
+  if (lightsError instanceof CouldNotConnectToHueBridgeError) return <BridgeNotFound />;
 
   const rooms = groups.filter((group) => group.type === "Room") as Group[];
   const entertainmentAreas = groups.filter((group) => group.type === "Entertainment") as Group[];

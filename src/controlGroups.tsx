@@ -17,7 +17,7 @@ import { getIconForColor, getLightIcon } from "./lib/utils";
 import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEMP_MIN, COLORS } from "./lib/constants";
 import { hexToXy } from "./lib/colors";
 import NoHueBridgeConfigured from "./components/noHueBridgeConfigured";
-import FailedToConnect from "./components/failedToConnect";
+import BridgeNotFound from "./components/bridgeNotFound";
 import { CouldNotConnectToHueBridgeError, NoHueBridgeConfiguredError } from "./lib/errors";
 import Style = Toast.Style;
 
@@ -25,7 +25,7 @@ export default function Command() {
   const { isLoading, groups, mutateGroups, groupsError, scenes } = useHue();
 
   if (groupsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
-  if (groupsError instanceof CouldNotConnectToHueBridgeError) return <FailedToConnect />;
+  if (groupsError instanceof CouldNotConnectToHueBridgeError) return <BridgeNotFound />;
 
   const rooms: Room[] = groups.filter((group: Group) => group.type == "Room") as Room[];
   const entertainmentAreas: Group[] = groups.filter((group: Group) => group.type == "Entertainment");
