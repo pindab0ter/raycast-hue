@@ -23,21 +23,38 @@ export default function Command() {
 
   const rooms = groups.filter((group) => group.type == "Room") as Room[];
   const zones = groups.filter((group) => group.type == "Zone");
+  const entertainmentAreas = groups.filter((group) => group.type == "Entertainment");
 
   return (
     <List isLoading={isLoading}>
       {rooms.length > 0 && (
         <List.Section title="Rooms">
           {rooms.map((room: Room) => {
-            const groupScenes = scenes.filter((scene) => scene.group == room.id);
-            return <Group key={room.id} group={room} mutateGroups={mutateGroups} scenes={groupScenes} />;
+            const roomScenes = scenes.filter((scene) => scene.group == room.id);
+            return <Group key={room.id} group={room} mutateGroups={mutateGroups} scenes={roomScenes} />;
           })}
         </List.Section>
       )}
       {zones.length > 0 && (
         <List.Section title="Zones">
           {zones.map((zone: Group) => {
-            return <Group key={zone.id} group={zone} mutateGroups={mutateGroups} />;
+            const zoneScenes = scenes.filter((scene) => scene.group == zone.id);
+            return <Group key={zone.id} group={zone} mutateGroups={mutateGroups} scenes={zoneScenes} />;
+          })}
+        </List.Section>
+      )}
+      {entertainmentAreas.length > 0 && (
+        <List.Section title="Entertainment Areas">
+          {zones.map((entertainmentArea: Group) => {
+            const entertainmentAreaScenes = scenes.filter((scene) => scene.group == entertainmentArea.id);
+            return (
+              <Group
+                key={entertainmentArea.id}
+                group={entertainmentArea}
+                mutateGroups={mutateGroups}
+                scenes={entertainmentAreaScenes}
+              />
+            );
           })}
         </List.Section>
       )}
