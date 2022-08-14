@@ -6,6 +6,14 @@ const failureImage = `file://${join(environment.assetsPath, "bridge-failure.png"
 const connectImage = `file://${join(environment.assetsPath, "bridge-connect.png")}`;
 const buttonImage = `file://${join(environment.assetsPath, "bridge-button.png")}`;
 
+export const noBridgeConfiguredMessage = `
+# No Hue Bridge Configured
+
+![Not Found](${connectImage})
+
+Please use the Manage Hue Bridge command to link your Hue Bridge.
+`;
+
 export const noBridgeFoundMessage = `
 # No Hue Bridge found
 

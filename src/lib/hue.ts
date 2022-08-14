@@ -15,6 +15,7 @@ import {
   COLOR_TEMP_MIN,
   COLOR_TEMPERATURE_STEP,
 } from "./constants";
+import { CouldNotConnectToHueBridgeError, NoHueBridgeConfiguredError } from "./errors";
 
 let _api: Api;
 
@@ -23,6 +24,7 @@ export function useHue() {
     isLoading: isLoadingLights,
     data: lights,
     mutate: mutateLights,
+    error: lightsError,
   } = useCachedPromise(
     async () => {
       const api = await getAuthenticatedApi();
@@ -40,6 +42,7 @@ export function useHue() {
     isLoading: isLoadingGroups,
     data: groups,
     mutate: mutateGroups,
+    error: groupsError,
   } = useCachedPromise(
     async () => {
       const api = await getAuthenticatedApi();
@@ -53,7 +56,11 @@ export function useHue() {
     }
   );
 
-  const { isLoading: isLoadingScenes, data: scenes } = useCachedPromise(
+  const {
+    isLoading: isLoadingScenes,
+    data: scenes,
+    error: scenesError,
+  } = useCachedPromise(
     async () => {
       const api = await getAuthenticatedApi();
       const scenes = await api.scenes.getAll();
@@ -70,9 +77,12 @@ export function useHue() {
     isLoading: isLoadingLights || isLoadingGroups || isLoadingScenes,
     lights,
     mutateLights,
+    lightsError,
     groups,
     mutateGroups,
+    groupsError,
     scenes,
+    scenesError,
   };
 }
 
@@ -82,9 +92,13 @@ export async function getAuthenticatedApi(): Promise<Api> {
   const bridgeIpAddress = await LocalStorage.getItem<string>(BRIDGE_IP_ADDRESS_KEY);
   const bridgeUsername = await LocalStorage.getItem<string>(BRIDGE_USERNAME_KEY);
 
-  if (!bridgeIpAddress || !bridgeUsername) throw new Error("No Hue Bridge configured");
+  if (!bridgeIpAddress || !bridgeUsername) throw new NoHueBridgeConfiguredError();
 
-  _api = await v3.api.createLocal(bridgeIpAddress).connect(bridgeUsername);
+  try {
+    _api = await v3.api.createLocal(bridgeIpAddress).connect(bridgeUsername);
+  } catch (error) {
+    throw new CouldNotConnectToHueBridgeError();
+  }
 
   return _api;
 }

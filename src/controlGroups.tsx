@@ -16,14 +16,20 @@ import { CssColor, Group, Room, Scene } from "./lib/types";
 import { getIconForColor, getLightIcon } from "./lib/utils";
 import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEMP_MIN, COLORS } from "./lib/constants";
 import { hexToXy } from "./lib/colors";
+import NoHueBridgeConfigured from "./components/noHueBridgeConfigured";
+import FailedToConnect from "./components/failedToConnect";
+import { CouldNotConnectToHueBridgeError, NoHueBridgeConfiguredError } from "./lib/errors";
 import Style = Toast.Style;
 
 export default function Command() {
-  const { isLoading, groups, mutateGroups, scenes } = useHue();
+  const { isLoading, groups, mutateGroups, groupsError, scenes } = useHue();
 
-  const rooms = groups.filter((group) => group.type == "Room") as Room[];
-  const zones = groups.filter((group) => group.type == "Zone");
-  const entertainmentAreas = groups.filter((group) => group.type == "Entertainment");
+  if (groupsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
+  if (groupsError instanceof CouldNotConnectToHueBridgeError) return <FailedToConnect />;
+
+  const rooms: Room[] = groups.filter((group) => group.type == "Room") as Room[];
+  const zones: Group[] = groups.filter((group) => group.type == "Zone");
+  const entertainmentAreas: Group[] = groups.filter((group) => group.type == "Entertainment");
 
   return (
     <List isLoading={isLoading}>

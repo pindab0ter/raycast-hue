@@ -2,23 +2,29 @@ import { ActionPanel, Icon, List, Toast } from "@raycast/api";
 import { hexToXy } from "./lib/colors";
 import {
   adjustBrightness,
-  adjustColorTemperature, calculateAdjustedBrightness,
+  adjustColorTemperature,
+  calculateAdjustedBrightness,
   calculateAdjustedColorTemperature,
   setLightBrightness,
   setLightColor,
   toggleLight,
-  useHue
+  useHue,
 } from "./lib/hue";
 import { getIconForColor, getLightIcon } from "./lib/utils";
 import { MutatePromise } from "@raycast/utils";
 import { CssColor, Light, Room } from "./lib/types";
 import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEMP_MIN, COLORS } from "./lib/constants";
+import { CouldNotConnectToHueBridgeError, NoHueBridgeConfiguredError } from "./lib/errors";
+import NoHueBridgeConfigured from "./components/noHueBridgeConfigured";
+import FailedToConnect from "./components/failedToConnect";
 import Style = Toast.Style;
 
-export default function Command() {
-  const { isLoading, lights, mutateLights, groups } = useHue();
+export default function ControlLights() {
+  const { isLoading, lights, mutateLights, lightsError, groups } = useHue();
 
   const rooms = groups.filter((group) => group.type == "Room") as Room[];
+  if (lightsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
+  if (lightsError instanceof CouldNotConnectToHueBridgeError) return <FailedToConnect />;
 
   return (
     <List isLoading={isLoading}>
