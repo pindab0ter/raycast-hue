@@ -1,4 +1,4 @@
-import { Icon, Image } from "@raycast/api";
+import { getPreferenceValues, Icon, Image } from "@raycast/api";
 import { getRgbFrom } from "./colors";
 import { CssColor, LightState } from "./types";
 import { getProgressIcon } from "@raycast/utils";
@@ -11,4 +11,8 @@ export function getLightIcon(lightState: LightState) {
 
 export function getIconForColor(color: CssColor): Image {
   return { source: Icon.CircleFilled, tintColor: { light: color.value, dark: color.value, adjustContrast: false } };
+}
+
+export function getTransitionTimeInMs(): number {
+  return Math.round(parseInt(getPreferenceValues().transitionTime) / 100);
 }

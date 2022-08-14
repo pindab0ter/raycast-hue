@@ -47,6 +47,17 @@
       "mode": "view"
     }
   ],
+  "preferences": [
+    {
+      "name": "transitionTime",
+      "title": "Transition Time",
+      "description": "The time in milliseconds that the transition will take, rounded to 100ms.",
+      "placeholder": "400",
+      "type": "textfield",
+      "default": "400",
+      "required": false
+    }
+  ],
   "dependencies": {
     "@raycast/api": "^1.38.2",
     "@raycast/utils": "^1.0.7",

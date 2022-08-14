@@ -16,6 +16,7 @@ import {
   COLOR_TEMPERATURE_STEP,
 } from "./constants";
 import { CouldNotConnectToHueBridgeError, NoHueBridgeConfiguredError } from "./errors";
+import { getTransitionTimeInMs } from "./utils";
 
 let _api: Api;
 
@@ -152,18 +153,27 @@ export async function turnOffAllLights() {
 
   const lights = await api.lights.getAll();
   for await (const light of lights) {
-    await api.lights.setLightState(light.id, { on: false });
+    await api.lights.setLightState(
+      light.id,
+      new v3.model.lightStates.LightState().off().transitiontime(getTransitionTimeInMs())
+    );
   }
 }
 
 export async function toggleLight(light: Light) {
   const api = await getAuthenticatedApi();
-  await api.lights.setLightState(light.id, { on: !light.state.on });
+  await api.lights.setLightState(light.id, {
+    on: !light.state.on,
+    transitiontime: getTransitionTimeInMs(),
+  });
 }
 
 export async function turnGroupOn(group: Group) {
   const api = await getAuthenticatedApi();
-  await api.groups.setGroupState(group.id, new v3.model.lightStates.GroupLightState().on());
+  await api.groups.setGroupState(
+    group.id,
+    new v3.model.lightStates.GroupLightState().on().transitiontime(getTransitionTimeInMs())
+  );
 }
 
 export async function turnGroupOff(group: Group) {
@@ -173,27 +183,33 @@ export async function turnGroupOff(group: Group) {
 
 export async function setLightBrightness(light: Light, percentage: number) {
   const api = await getAuthenticatedApi();
-  const newLightState = new v3.model.lightStates.LightState().on().bri(percentage);
+  const newLightState = new v3.model.lightStates.LightState()
+    .on()
+    .bri(percentage)
+    .transitiontime(getTransitionTimeInMs());
   await api.lights.setLightState(light.id, newLightState);
 }
 
 export async function setGroupBrightness(group: Group, percentage: number) {
   const api = await getAuthenticatedApi();
-  const newLightState = new v3.model.lightStates.GroupLightState().on().bri(percentage);
+  const newLightState = new v3.model.lightStates.GroupLightState()
+    .on()
+    .bri(percentage)
+    .transitiontime(getTransitionTimeInMs());
   await api.groups.setGroupState(group.id, newLightState);
 }
 
 export async function setLightColor(light: Light, color: string) {
   const api = await getAuthenticatedApi();
   const xy = hexToXy(color);
-  const newLightState = new v3.model.lightStates.LightState().on().xy(xy);
+  const newLightState = new v3.model.lightStates.LightState().on().xy(xy).transitiontime(getTransitionTimeInMs());
   await api.lights.setLightState(light.id, newLightState);
 }
 
 export async function setGroupColor(group: Group, color: string) {
   const api = await getAuthenticatedApi();
   const xy = hexToXy(color);
-  const newLightState = new v3.model.lightStates.GroupLightState().on().xy(xy);
+  const newLightState = new v3.model.lightStates.GroupLightState().on().xy(xy).transitiontime(getTransitionTimeInMs());
   await api.groups.setGroupState(group.id, newLightState);
 }
 
@@ -215,10 +231,16 @@ export async function adjustBrightness(entity: Light | Group, direction: "increa
   const delta = direction === "increase" ? BRIGHTNESS_STEP : -BRIGHTNESS_STEP;
 
   if ("action" in entity) {
-    const newLightState = new v3.model.lightStates.GroupLightState().on().bri_inc(delta);
+    const newLightState = new v3.model.lightStates.GroupLightState()
+      .on()
+      .bri_inc(delta)
+      .transitiontime(getTransitionTimeInMs());
     await api.groups.setGroupState(entity.id, newLightState);
   } else {
-    const newLightState = new v3.model.lightStates.LightState().on().bri_inc(delta);
+    const newLightState = new v3.model.lightStates.LightState()
+      .on()
+      .bri_inc(delta)
+      .transitiontime(getTransitionTimeInMs());
     await api.lights.setLightState(entity.id, newLightState);
   }
 }
@@ -244,15 +266,24 @@ export async function adjustColorTemperature(entity: Light | Group, direction: "
   const delta = direction === "increase" ? -COLOR_TEMPERATURE_STEP : COLOR_TEMPERATURE_STEP;
 
   if ("action" in entity) {
-    const newLightState = new v3.model.lightStates.GroupLightState().on().ct_inc(delta);
+    const newLightState = new v3.model.lightStates.GroupLightState()
+      .on()
+      .ct_inc(delta)
+      .transitiontime(getTransitionTimeInMs());
     await api.groups.setGroupState(entity.id, newLightState);
   } else {
-    const newLightState = new v3.model.lightStates.LightState().on().ct_inc(delta);
+    const newLightState = new v3.model.lightStates.LightState()
+      .on()
+      .ct_inc(delta)
+      .transitiontime(getTransitionTimeInMs());
     await api.lights.setLightState(entity.id, newLightState);
   }
 }
 
 export async function setScene(scene: Scene) {
   const api = await getAuthenticatedApi();
-  await api.groups.setGroupState(0, new v3.model.lightStates.GroupLightState().scene(scene.id));
+  await api.groups.setGroupState(
+    0,
+    new v3.model.lightStates.GroupLightState().scene(scene.id).transitiontime(getTransitionTimeInMs())
+  );
 }
