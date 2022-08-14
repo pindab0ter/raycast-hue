@@ -15,10 +15,11 @@
       "mode": "view"
     },
     {
-      "name": "controlRoomsAndZones",
-      "title": "Control Rooms and Zones",
+      "name": "controlGroups",
+      "title": "Control Groups",
       "subtitle": "Hue",
-      "description": "List, search and control rooms and zones",
+      "keywords": ["room", "zone", "entertainment"],
+      "description": "List, search and control rooms, zones and entertainment areas",
       "mode": "view"
     },
     {
