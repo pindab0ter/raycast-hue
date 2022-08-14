@@ -203,17 +203,17 @@ function DecreaseBrightnessAction(props: { group: Group; onDecrease?: () => void
 //     />
 //   ) : null;
 // }
-//
-// function RefreshAction(props: { onRefresh: () => void }) {
-//   return (
-//     <ActionPanel.Item
-//       title="Refresh"
-//       icon={Icon.ArrowClockwise}
-//       shortcut={{ modifiers: ["cmd"], key: "r" }}
-//       onAction={props.onRefresh}
-//     />
-//   );
-// }
+
+function RefreshAction(props: { onRefresh: () => void }) {
+  return (
+    <ActionPanel.Item
+      title="Refresh"
+      icon={Icon.ArrowClockwise}
+      shortcut={{ modifiers: ["cmd"], key: "r" }}
+      onAction={props.onRefresh}
+    />
+  );
+}
 
 async function handleTurnAllOn(group: Group, mutateGroups: MutatePromise<Group[]>) {
   const toast = new Toast({ title: "" });
