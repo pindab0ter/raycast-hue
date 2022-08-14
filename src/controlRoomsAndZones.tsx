@@ -1,10 +1,20 @@
 import { ActionPanel, Icon, List, Toast } from "@raycast/api";
-import { calcDecreasedBrightness, calcIncreasedBrightness, decreaseGroupBrightness, increaseGroupBrightness, increaseLightBrightness, setScene, turnAllLightsOff, turnAllLightsOn, useHue } from "./lib/hue";
+import {
+  calcDecreasedBrightness,
+  calcIncreasedBrightness,
+  decreaseGroupBrightness,
+  increaseGroupBrightness,
+  setGroupBrightness,
+  setScene,
+  turnAllLightsOff,
+  turnAllLightsOn,
+  useHue,
+} from "./lib/hue";
 import { MutatePromise } from "@raycast/utils";
 import { Group, Room, Scene } from "./lib/types";
 import { getLightIcon } from "./lib/utils";
+import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES } from "./lib/constants";
 import Style = Toast.Style;
-import { BRIGHTNESS_MAX, BRIGHTNESS_MIN } from "./lib/constants";
 
 export default function Command() {
   const { isLoading, groups, mutateGroups, scenes } = useHue();
@@ -56,10 +66,10 @@ function Group(props: { group: Group; mutateGroups: MutatePromise<Group[]>; scen
           )}
 
           <ActionPanel.Section>
-          {/*  <SetBrightnessAction*/}
-          {/*    group={props.group}*/}
-          {/*    onSet={(percentage: number) => handleSetBrightness(props.group, props.mutateLights, percentage)}*/}
-          {/*  />*/}
+            <SetBrightnessAction
+              group={props.group}
+              onSet={(percentage: number) => handleSetBrightness(props.group, props.mutateGroups, percentage)}
+            />
             <IncreaseBrightnessAction
               group={props.group}
               onIncrease={() => handleIncreaseBrightness(props.group, props.mutateGroups)}
@@ -117,23 +127,23 @@ function SetSceneAction(props: { group: Group; scenes: Scene[]; onSetScene: (sce
   );
 }
 
-// function SetBrightnessAction(props: { group: Light; onSet: (percentage: number) => void }) {
-//   return (
-//     <ActionPanel.Submenu
-//       title="Set Brightness"
-//       icon={Icon.CircleProgress}
-//       shortcut={{ modifiers: ["cmd", "shift"], key: "b" }}
-//     >
-//       {BRIGHTNESSES.map((brightness) => (
-//         <ActionPanel.Item
-//           key={brightness}
-//           title={`${brightness}% Brightness`}
-//           onAction={() => props.onSet(brightness)}
-//         />
-//       ))}
-//     </ActionPanel.Submenu>
-//   );
-// }
+function SetBrightnessAction(props: { group: Group; onSet: (percentage: number) => void }) {
+  return (
+    <ActionPanel.Submenu
+      title="Set Brightness"
+      icon={Icon.CircleProgress}
+      shortcut={{ modifiers: ["cmd", "shift"], key: "b" }}
+    >
+      {BRIGHTNESSES.map((brightness) => (
+        <ActionPanel.Item
+          key={brightness}
+          title={`${brightness}% Brightness`}
+          onAction={() => props.onSet(brightness)}
+        />
+      ))}
+    </ActionPanel.Submenu>
+  );
+}
 
 function IncreaseBrightnessAction(props: { group: Group; onIncrease?: () => void }) {
   return props.group.action.bri < BRIGHTNESS_MAX ? (
@@ -265,28 +275,30 @@ async function handleSetScene(group: Group, scene: Scene, mutateGroups: MutatePr
   }
 }
 
-// async function handleSetBrightness(group: Light, mutateGroups: MutatePromise<Light[]>, percentage: number) {
-//   const toast = new Toast({ title: "" });
-//   const brightness = (percentage / 100) * 253 + 1;
-//
-//   try {
-//     await mutateGroups(setBrightness(group, brightness), {
-//       optimisticUpdate(rooms) {
-//         return rooms.map((it) => (it.id === group.id ? { ...it, state: { ...it.state, on: true, bri: brightness } } : it));
-//       },
-//     });
-//
-//     toast.style = Style.Success;
-//     toast.title = `Set brightness to ${(percentage / 100).toLocaleString("en", { style: "percent" })}`;
-//     await toast.show();
-//   } catch (e) {
-//     toast.style = Style.Failure;
-//     toast.title = "Failed setting brightness";
-//     toast.message = e instanceof Error ? e.message : undefined;
-//     await toast.show();
-//   }
-// }
-//
+async function handleSetBrightness(group: Group, mutateGroups: MutatePromise<Group[]>, percentage: number) {
+  const toast = new Toast({ title: "" });
+  const brightness = (percentage / 100) * 253 + 1;
+
+  try {
+    await mutateGroups(setGroupBrightness(group, brightness), {
+      optimisticUpdate(rooms) {
+        return rooms.map((it) =>
+          it.id === group.id ? { ...it, state: { ...it.state, on: true, bri: brightness } } : it
+        );
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = `Set brightness to ${(percentage / 100).toLocaleString("en", { style: "percent" })}`;
+    await toast.show();
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed setting brightness";
+    toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
+  }
+}
+
 async function handleIncreaseBrightness(group: Group, mutateGroups: MutatePromise<Group[]>) {
   const toast = new Toast({ title: "" });
 
@@ -294,7 +306,9 @@ async function handleIncreaseBrightness(group: Group, mutateGroups: MutatePromis
     await mutateGroups(increaseGroupBrightness(group), {
       optimisticUpdate(rooms) {
         return rooms?.map((it) =>
-          it.id === group.id ? { ...it, action: { ...it.action, on: true, bri: calcIncreasedBrightness(group.action) } } : it
+          it.id === group.id
+            ? { ...it, action: { ...it.action, on: true, bri: calcIncreasedBrightness(group.action) } }
+            : it
         );
       },
     });
@@ -317,7 +331,9 @@ async function handleDecreaseBrightness(group: Group, mutateGroups: MutatePromis
     await mutateGroups(decreaseGroupBrightness(group), {
       optimisticUpdate(rooms) {
         return rooms.map((it) =>
-          it.id === group.id ? { ...it, action: { ...it.action, on: true, bri: calcDecreasedBrightness(group.action) } } : it
+          it.id === group.id
+            ? { ...it, action: { ...it.action, on: true, bri: calcDecreasedBrightness(group.action) } }
+            : it
         );
       },
     });

@@ -171,18 +171,24 @@ export async function decreaseLightBrightness(light: Light) {
 
 export async function decreaseGroupBrightness(group: Group) {
   const api = await getAuthenticatedApi();
-  const newGroupState = new v3.model.lightStates.GroupLightState().on().bri_inc(-BRIGHTNESS_STEP);
-  await api.groups.setGroupState(group.id, newGroupState);
+  const newLightState = new v3.model.lightStates.GroupLightState().on().bri_inc(-BRIGHTNESS_STEP);
+  await api.groups.setGroupState(group.id, newLightState);
 }
 
 export function calcDecreasedBrightness(lightState: LightState) {
   return Math.min(Math.max(BRIGHTNESS_MIN, lightState.bri - BRIGHTNESS_STEP), BRIGHTNESS_MAX);
 }
 
-export async function setBrightness(light: Light, percentage: number) {
+export async function setLightBrightness(light: Light, percentage: number) {
   const api = await getAuthenticatedApi();
   const newLightState = new v3.model.lightStates.LightState().on().bri(percentage);
   await api.lights.setLightState(light.id, newLightState);
+}
+
+export async function setGroupBrightness(group: Group, percentage: number) {
+  const api = await getAuthenticatedApi();
+  const newLightState = new v3.model.lightStates.GroupLightState().on().bri(percentage);
+  await api.groups.setGroupState(group.id, newLightState);
 }
 
 export async function setColor(light: Light, color: string) {

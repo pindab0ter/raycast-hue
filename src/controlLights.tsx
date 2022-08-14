@@ -9,7 +9,7 @@ import {
   decreaseColorTemperature,
   increaseLightBrightness,
   increaseColorTemperature,
-  setBrightness,
+  setLightBrightness,
   setColor,
   toggleLight,
   useHue,
@@ -227,7 +227,7 @@ async function handleSetBrightness(light: Light, mutateLights: MutatePromise<Lig
   const brightness = (percentage / 100) * 253 + 1;
 
   try {
-    await mutateLights(setBrightness(light, brightness), {
+    await mutateLights(setLightBrightness(light, brightness), {
       optimisticUpdate(lights) {
         return lights.map((it) =>
           it.id === light.id ? { ...it, state: { ...it.state, on: true, bri: brightness } } : it
