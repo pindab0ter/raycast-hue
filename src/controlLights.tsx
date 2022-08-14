@@ -52,18 +52,19 @@ function Group(props: { lights: Light[]; group: Group; mutateLights: MutatePromi
     <List.Section key={props.group.id} title={props.group.name} subtitle={props.group.type}>
       {props.lights.map(
         (light: Light): JSX.Element => (
-          <Light key={light.id} light={light} mutateLights={props.mutateLights} />
+          <Light key={light.id} light={light} group={props.group} mutateLights={props.mutateLights} />
         )
       )}
     </List.Section>
   );
 }
 
-function Light(props: { light: Light; mutateLights: MutatePromise<Light[]> }) {
+function Light(props: { light: Light; group: Group; mutateLights: MutatePromise<Light[]> }) {
   return (
     <List.Item
       title={props.light.name}
       icon={getLightIcon(props.light.state)}
+      keywords={[props.group.name]}
       actions={
         <ActionPanel>
           <ActionPanel.Section>

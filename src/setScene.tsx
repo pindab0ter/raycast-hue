@@ -51,6 +51,7 @@ function Scene(props: { group: Group; scene: Scene; mutateGroups: MutatePromise<
   return (
     <List.Item
       title={props.scene.name}
+      keywords={[props.group.name]}
       actions={
         <ActionPanel>
           <SetSceneAction
