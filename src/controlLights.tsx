@@ -30,7 +30,6 @@ export default function ControlLights() {
   if (lightsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
   if (lightsError instanceof CouldNotConnectToHueBridgeError) return <BridgeNotFound />;
 
-
   return (
     <List isLoading={isLoading}>
       {groupTypes.map((groupType: Group[]): JSX.Element[] => {
