@@ -6,6 +6,10 @@
   "icon": "command-icon.png",
   "author": "pindab0ter",
   "license": "MIT",
+  "categories": [
+    "Applications",
+    "Other"
+  ],
   "commands": [
     {
       "name": "controlLights",
