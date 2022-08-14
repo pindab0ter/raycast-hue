@@ -2,7 +2,7 @@ import { discovery, v3 } from "node-hue-api";
 import { Api } from "node-hue-api/dist/esm/api/Api";
 import { LocalStorage } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
-import { Group, Light, LightState, Scene } from "./types";
+import { Group, Light, Scene } from "./types";
 import { hexToXy } from "./colors";
 import {
   APP_NAME,
@@ -147,36 +147,14 @@ export async function toggleLight(light: Light) {
   await api.lights.setLightState(light.id, { on: !light.state.on });
 }
 
-export async function increaseLightBrightness(light: Light) {
+export async function turnGroupOn(group: Group) {
   const api = await getAuthenticatedApi();
-  const newLightState = new v3.model.lightStates.LightState().on().bri_inc(BRIGHTNESS_STEP);
-  await api.lights.setLightState(light.id, newLightState);
+  await api.groups.setGroupState(group.id, new v3.model.lightStates.GroupLightState().on());
 }
 
-export async function increaseGroupBrightness(group: Group) {
+export async function turnGroupOff(group: Group) {
   const api = await getAuthenticatedApi();
-  const newLightState = new v3.model.lightStates.GroupLightState().on().bri_inc(BRIGHTNESS_STEP);
-  await api.groups.setGroupState(group.id, newLightState);
-}
-
-export function calcIncreasedBrightness(lightState: LightState) {
-  return Math.min(Math.max(BRIGHTNESS_MIN, lightState.bri + BRIGHTNESS_STEP), BRIGHTNESS_MAX);
-}
-
-export async function decreaseLightBrightness(light: Light) {
-  const api = await getAuthenticatedApi();
-  const newLightState = new v3.model.lightStates.LightState().on().bri_inc(-BRIGHTNESS_STEP);
-  await api.lights.setLightState(light.id, newLightState);
-}
-
-export async function decreaseGroupBrightness(group: Group) {
-  const api = await getAuthenticatedApi();
-  const newLightState = new v3.model.lightStates.GroupLightState().on().bri_inc(-BRIGHTNESS_STEP);
-  await api.groups.setGroupState(group.id, newLightState);
-}
-
-export function calcDecreasedBrightness(lightState: LightState) {
-  return Math.min(Math.max(BRIGHTNESS_MIN, lightState.bri - BRIGHTNESS_STEP), BRIGHTNESS_MAX);
+  await api.groups.setGroupState(group.id, new v3.model.lightStates.GroupLightState().off());
 }
 
 export async function setLightBrightness(light: Light, percentage: number) {
@@ -191,41 +169,73 @@ export async function setGroupBrightness(group: Group, percentage: number) {
   await api.groups.setGroupState(group.id, newLightState);
 }
 
-export async function setColor(light: Light, color: string) {
+export async function setLightColor(light: Light, color: string) {
   const api = await getAuthenticatedApi();
   const xy = hexToXy(color);
   const newLightState = new v3.model.lightStates.LightState().on().xy(xy);
   await api.lights.setLightState(light.id, newLightState);
 }
 
-export async function increaseColorTemperature(light: Light) {
+export async function setGroupColor(group: Group, color: string) {
   const api = await getAuthenticatedApi();
-  const newLightState = new v3.model.lightStates.LightState().on().ct_inc(-COLOR_TEMPERATURE_STEP);
-  await api.lights.setLightState(light.id, newLightState);
+  const xy = hexToXy(color);
+  const newLightState = new v3.model.lightStates.GroupLightState().on().xy(xy);
+  await api.groups.setGroupState(group.id, newLightState);
 }
 
-export function calcIncreasedColorTemperature(light: Light) {
-  return Math.min(Math.max(COLOR_TEMP_MIN, light.state.bri - COLOR_TEMPERATURE_STEP), COLOR_TEMP_MAX);
+export function calculateAdjustedBrightness(entity: Light | Group, direction: "increase" | "decrease") {
+  let brightness;
+  if ("action" in entity) {
+    brightness = entity.action.bri;
+  } else {
+    brightness = entity.state.bri;
+  }
+
+  const newBrightness = direction === "increase" ? brightness + BRIGHTNESS_STEP : brightness - BRIGHTNESS_STEP;
+
+  return Math.min(Math.max(BRIGHTNESS_MIN, newBrightness), BRIGHTNESS_MAX);
 }
 
-export async function decreaseColorTemperature(light: Light) {
+export async function adjustBrightness(entity: Light | Group, direction: "increase" | "decrease") {
   const api = await getAuthenticatedApi();
-  const newLightState = new v3.model.lightStates.LightState().on().ct_inc(COLOR_TEMPERATURE_STEP);
-  await api.lights.setLightState(light.id, newLightState);
+  const delta = direction === "increase" ? BRIGHTNESS_STEP : -BRIGHTNESS_STEP;
+
+  if ("action" in entity) {
+    const newLightState = new v3.model.lightStates.GroupLightState().on().bri_inc(delta);
+    await api.groups.setGroupState(entity.id, newLightState);
+  } else {
+    const newLightState = new v3.model.lightStates.LightState().on().bri_inc(delta);
+    await api.lights.setLightState(entity.id, newLightState);
+  }
 }
 
-export function calcDecreasedColorTemperature(light: Light) {
-  return Math.min(Math.max(COLOR_TEMP_MIN, light.state.bri + COLOR_TEMPERATURE_STEP), COLOR_TEMP_MAX);
+export function calculateAdjustedColorTemperature(entity: Light | Group, direction: "increase" | "decrease") {
+  let colorTemperature;
+  if ("action" in entity) {
+    if (entity.action.colormode !== "ct") throw new Error("Light is not in color temperature mode");
+    colorTemperature = entity.action.ct;
+  } else {
+    if (entity.state.colormode !== "ct") throw new Error("Light is not in color temperature mode");
+    colorTemperature = entity.state.ct;
+  }
+
+  const newColorTemperature =
+    direction === "increase" ? colorTemperature - COLOR_TEMPERATURE_STEP : colorTemperature + COLOR_TEMPERATURE_STEP;
+
+  return Math.min(Math.max(COLOR_TEMP_MIN, newColorTemperature), COLOR_TEMP_MAX);
 }
 
-export async function turnAllLightsOn(group: Group) {
+export async function adjustColorTemperature(entity: Light | Group, direction: "increase" | "decrease") {
   const api = await getAuthenticatedApi();
-  await api.groups.setGroupState(group.id, new v3.model.lightStates.GroupLightState().on());
-}
+  const delta = direction === "increase" ? -COLOR_TEMPERATURE_STEP : COLOR_TEMPERATURE_STEP;
 
-export async function turnAllLightsOff(group: Group) {
-  const api = await getAuthenticatedApi();
-  await api.groups.setGroupState(group.id, new v3.model.lightStates.GroupLightState().off());
+  if ("action" in entity) {
+    const newLightState = new v3.model.lightStates.GroupLightState().on().ct_inc(delta);
+    await api.groups.setGroupState(entity.id, newLightState);
+  } else {
+    const newLightState = new v3.model.lightStates.LightState().on().ct_inc(delta);
+    await api.lights.setLightState(entity.id, newLightState);
+  }
 }
 
 export async function setScene(scene: Scene) {

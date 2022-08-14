@@ -1,19 +1,21 @@
 import { ActionPanel, Icon, List, Toast } from "@raycast/api";
 import {
-  calcDecreasedBrightness,
-  calcIncreasedBrightness,
-  decreaseGroupBrightness,
-  increaseGroupBrightness,
+  adjustBrightness,
+  adjustColorTemperature,
+  calculateAdjustedBrightness,
+  calculateAdjustedColorTemperature,
   setGroupBrightness,
+  setGroupColor,
   setScene,
-  turnAllLightsOff,
-  turnAllLightsOn,
+  turnGroupOff,
+  turnGroupOn,
   useHue,
 } from "./lib/hue";
 import { MutatePromise } from "@raycast/utils";
-import { Group, Room, Scene } from "./lib/types";
-import { getLightIcon } from "./lib/utils";
-import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES } from "./lib/constants";
+import { CssColor, Group, Room, Scene } from "./lib/types";
+import { getIconForColor, getLightIcon } from "./lib/utils";
+import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEMP_MIN, COLORS } from "./lib/constants";
+import { hexToXy } from "./lib/colors";
 import Style = Toast.Style;
 
 export default function Command() {
@@ -79,30 +81,30 @@ function Group(props: { group: Group; mutateGroups: MutatePromise<Group[]>; scen
               onDecrease={() => handleDecreaseBrightness(props.group, props.mutateGroups)}
             />
           </ActionPanel.Section>
-          {/*<ActionPanel.Section>*/}
-          {/*  {props.group.state.colormode == "xy" && (*/}
-          {/*    <SetColorAction*/}
-          {/*      group={props.group}*/}
-          {/*      onSet={(color: CssColor) => handleSetColor(props.group, props.mutateLights, color)}*/}
-          {/*    />*/}
-          {/*  )}*/}
-          {/*  {props.group.state.colormode == "ct" && (*/}
-          {/*    <IncreaseColorTemperatureAction*/}
-          {/*      group={props.group}*/}
-          {/*      onIncrease={() => handleIncreaseColorTemperature(props.group, props.mutateLights)}*/}
-          {/*    />*/}
-          {/*  )}*/}
-          {/*  {props.group.state.colormode == "ct" && (*/}
-          {/*    <DecreaseColorTemperatureAction*/}
-          {/*      group={props.group}*/}
-          {/*      onDecrease={() => handleDecreaseColorTemperature(props.group, props.mutateLights)}*/}
-          {/*    />*/}
-          {/*  )}*/}
-          {/*</ActionPanel.Section>*/}
+          <ActionPanel.Section>
+            {props.group.action.colormode == "xy" && (
+              <SetColorAction
+                group={props.group}
+                onSet={(color: CssColor) => handleSetColor(props.group, props.mutateGroups, color)}
+              />
+            )}
+            {props.group.action.colormode == "ct" && (
+              <IncreaseColorTemperatureAction
+                group={props.group}
+                onIncrease={() => handleIncreaseColorTemperature(props.group, props.mutateGroups)}
+              />
+            )}
+            {props.group.action.colormode == "ct" && (
+              <DecreaseColorTemperatureAction
+                group={props.group}
+                onDecrease={() => handleDecreaseColorTemperature(props.group, props.mutateGroups)}
+              />
+            )}
+          </ActionPanel.Section>
 
-          {/*<ActionPanel.Section>*/}
-          {/*  <RefreshAction onRefresh={() => props.mutateLights()} />*/}
-          {/*</ActionPanel.Section>*/}
+          <ActionPanel.Section>
+            <RefreshAction onRefresh={() => props.mutateGroups()} />
+          </ActionPanel.Section>
         </ActionPanel>
       }
     />
@@ -167,42 +169,42 @@ function DecreaseBrightnessAction(props: { group: Group; onDecrease?: () => void
   ) : null;
 }
 
-// function SetColorAction(props: { group: Light; onSet: (color: CssColor) => void }) {
-//   return (
-//     <ActionPanel.Submenu title="Set Color" icon={Icon.Swatch} shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}>
-//       {COLORS.map((color) => (
-//         <ActionPanel.Item
-//           key={color.name}
-//           title={color.name}
-//           icon={getIconForColor(color)}
-//           onAction={() => props.onSet(color)}
-//         />
-//       ))}
-//     </ActionPanel.Submenu>
-//   );
-// }
-//
-// function IncreaseColorTemperatureAction(props: { group: Light; onIncrease?: () => void }) {
-//   return props.group.state.bri > COLOR_TEMP_MIN ? (
-//     <ActionPanel.Item
-//       title="Increase Color Temperature"
-//       shortcut={{ modifiers: ["cmd", "shift"], key: "arrowRight" }}
-//       icon={Icon.Plus}
-//       onAction={props.onIncrease}
-//     />
-//   ) : null;
-// }
-//
-// function DecreaseColorTemperatureAction(props: { group: Light; onDecrease?: () => void }) {
-//   return props.group.state.bri < COLOR_TEMP_MAX ? (
-//     <ActionPanel.Item
-//       title="Decrease Color Temperature"
-//       shortcut={{ modifiers: ["cmd", "shift"], key: "arrowLeft" }}
-//       icon={Icon.Minus}
-//       onAction={props.onDecrease}
-//     />
-//   ) : null;
-// }
+function SetColorAction(props: { group: Group; onSet: (color: CssColor) => void }) {
+  return (
+    <ActionPanel.Submenu title="Set Color" icon={Icon.Swatch} shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}>
+      {COLORS.map((color) => (
+        <ActionPanel.Item
+          key={color.name}
+          title={color.name}
+          icon={getIconForColor(color)}
+          onAction={() => props.onSet(color)}
+        />
+      ))}
+    </ActionPanel.Submenu>
+  );
+}
+
+function IncreaseColorTemperatureAction(props: { group: Group; onIncrease?: () => void }) {
+  return props.group.action.bri > COLOR_TEMP_MIN ? (
+    <ActionPanel.Item
+      title="Increase Color Temperature"
+      shortcut={{ modifiers: ["cmd", "shift"], key: "arrowRight" }}
+      icon={Icon.Plus}
+      onAction={props.onIncrease}
+    />
+  ) : null;
+}
+
+function DecreaseColorTemperatureAction(props: { group: Group; onDecrease?: () => void }) {
+  return props.group.action.bri < COLOR_TEMP_MAX ? (
+    <ActionPanel.Item
+      title="Decrease Color Temperature"
+      shortcut={{ modifiers: ["cmd", "shift"], key: "arrowLeft" }}
+      icon={Icon.Minus}
+      onAction={props.onDecrease}
+    />
+  ) : null;
+}
 
 function RefreshAction(props: { onRefresh: () => void }) {
   return (
@@ -219,7 +221,7 @@ async function handleTurnAllOn(group: Group, mutateGroups: MutatePromise<Group[]
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateGroups(turnAllLightsOn(group), {
+    await mutateGroups(turnGroupOn(group), {
       optimisticUpdate(groups) {
         // TODO: Figure out why this doesn't update the state
         return groups.map((it) => (it.id === group.id ? { ...it, state: { any_on: true, all_on: true } } : it));
@@ -241,7 +243,7 @@ async function handleTurnAllOff(group: Group, mutateGroups: MutatePromise<Group[
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateGroups(turnAllLightsOff(group), {
+    await mutateGroups(turnGroupOff(group), {
       optimisticUpdate(groups) {
         return groups?.map((it) => (it.id === group.id ? { ...it, state: { any_on: false, all_on: false } } : it));
       },
@@ -303,11 +305,11 @@ async function handleIncreaseBrightness(group: Group, mutateGroups: MutatePromis
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateGroups(increaseGroupBrightness(group), {
+    await mutateGroups(adjustBrightness(group, "increase"), {
       optimisticUpdate(rooms) {
         return rooms?.map((it) =>
           it.id === group.id
-            ? { ...it, action: { ...it.action, on: true, bri: calcIncreasedBrightness(group.action) } }
+            ? { ...it, action: { ...it.action, on: true, bri: calculateAdjustedBrightness(group, "increase") } }
             : it
         );
       },
@@ -328,11 +330,11 @@ async function handleDecreaseBrightness(group: Group, mutateGroups: MutatePromis
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateGroups(decreaseGroupBrightness(group), {
+    await mutateGroups(adjustBrightness(group, "decrease"), {
       optimisticUpdate(rooms) {
         return rooms.map((it) =>
           it.id === group.id
-            ? { ...it, action: { ...it.action, on: true, bri: calcDecreasedBrightness(group.action) } }
+            ? { ...it, action: { ...it.action, on: true, bri: calculateAdjustedBrightness(group, "decrease") } }
             : it
         );
       },
@@ -349,75 +351,75 @@ async function handleDecreaseBrightness(group: Group, mutateGroups: MutatePromis
   }
 }
 
-// async function handleSetColor(group: Light, mutateGroups: MutatePromise<Light[]>, color: CssColor) {
-//   const toast = new Toast({ title: "" });
-//
-//   try {
-//     await mutateGroups(setColor(group, color.value), {
-//       optimisticUpdate(rooms) {
-//         return rooms.map((it) =>
-//           it.id === group.id ? { ...it, state: { ...it.state, on: true, xy: hexToXy(color.value) } } : it
-//         );
-//       },
-//     });
-//
-//     toast.style = Style.Success;
-//     toast.title = `Set color to ${color.name}`;
-//     await toast.show();
-//   } catch (e) {
-//     toast.style = Style.Failure;
-//     toast.title = "Failed setting color";
-//     toast.message = e instanceof Error ? e.message : undefined;
-//     await toast.show();
-//   }
-// }
-//
-// async function handleIncreaseColorTemperature(group: Light, mutateGroups: MutatePromise<Light[]>) {
-//   const toast = new Toast({ title: "" });
-//
-//   try {
-//     await mutateGroups(increaseColorTemperature(group), {
-//       optimisticUpdate(rooms) {
-//         return rooms?.map((it) =>
-//           it.id === group.id ? { ...it, state: { ...it.state, ct: calcIncreasedColorTemperature(group) } } : it
-//         );
-//       },
-//     });
-//
-//     console.log(group.state.ct);
-//
-//     toast.style = Style.Success;
-//     toast.title = "Increased color temperature";
-//     await toast.show();
-//   } catch (e) {
-//     toast.style = Style.Failure;
-//     toast.title = "Failed increasing color temperature";
-//     toast.message = e instanceof Error ? e.message : undefined;
-//     await toast.show();
-//   }
-// }
-//
-// async function handleDecreaseColorTemperature(group: Light, mutateGroups: MutatePromise<Light[]>) {
-//   const toast = new Toast({ title: "" });
-//
-//   try {
-//     await mutateGroups(decreaseColorTemperature(group), {
-//       optimisticUpdate(rooms) {
-//         return rooms.map((it) =>
-//           it.id === group.id ? { ...it, state: { ...it.state, ct: calcDecreasedColorTemperature(group) } } : it
-//         );
-//       },
-//     });
-//
-//     console.log(group.state.ct);
-//
-//     toast.style = Style.Success;
-//     toast.title = "Decreased color temperature";
-//     await toast.show();
-//   } catch (e) {
-//     toast.style = Style.Failure;
-//     toast.title = "Failed decreasing color temperature";
-//     toast.message = e instanceof Error ? e.message : undefined;
-//     await toast.show();
-//   }
-// }
+async function handleSetColor(group: Group, mutateGroups: MutatePromise<Group[]>, color: CssColor) {
+  const toast = new Toast({ title: "" });
+
+  try {
+    await mutateGroups(setGroupColor(group, color.value), {
+      optimisticUpdate(rooms) {
+        return rooms.map((it) =>
+          it.id === group.id ? { ...it, state: { ...it.state, on: true, xy: hexToXy(color.value) } } : it
+        );
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = `Set color to ${color.name}`;
+    await toast.show();
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed setting color";
+    toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
+  }
+}
+
+async function handleIncreaseColorTemperature(group: Group, mutateGroups: MutatePromise<Group[]>) {
+  const toast = new Toast({ title: "" });
+
+  try {
+    await mutateGroups(adjustColorTemperature(group, "increase"), {
+      optimisticUpdate(rooms) {
+        return rooms?.map((it) =>
+          it.id === group.id
+            ? { ...it, state: { ...it.state, ct: calculateAdjustedColorTemperature(group, "increase") } }
+            : it
+        );
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = "Increased color temperature";
+    await toast.show();
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed increasing color temperature";
+    toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
+  }
+}
+
+async function handleDecreaseColorTemperature(group: Group, mutateGroups: MutatePromise<Group[]>) {
+  const toast = new Toast({ title: "" });
+
+  try {
+    await mutateGroups(adjustColorTemperature(group, "decrease"), {
+      optimisticUpdate(rooms) {
+        return rooms.map((it) =>
+          it.id === group.id
+            ? { ...it, state: { ...it.state, ct: calculateAdjustedColorTemperature(group, "decrease") } }
+            : it
+        );
+      },
+    });
+
+    toast.style = Style.Success;
+    toast.title = "Decreased color temperature";
+    await toast.show();
+  } catch (e) {
+    toast.style = Style.Failure;
+    toast.title = "Failed decreasing color temperature";
+    toast.message = e instanceof Error ? e.message : undefined;
+    await toast.show();
+  }
+}

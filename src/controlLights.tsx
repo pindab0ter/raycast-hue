@@ -1,18 +1,13 @@
 import { ActionPanel, Icon, List, Toast } from "@raycast/api";
 import { hexToXy } from "./lib/colors";
 import {
-  calcDecreasedBrightness,
-  calcDecreasedColorTemperature,
-  calcIncreasedBrightness,
-  calcIncreasedColorTemperature,
-  decreaseLightBrightness,
-  decreaseColorTemperature,
-  increaseLightBrightness,
-  increaseColorTemperature,
+  adjustBrightness,
+  adjustColorTemperature, calculateAdjustedBrightness,
+  calculateAdjustedColorTemperature,
   setLightBrightness,
-  setColor,
+  setLightColor,
   toggleLight,
-  useHue,
+  useHue
 } from "./lib/hue";
 import { getIconForColor, getLightIcon } from "./lib/utils";
 import { MutatePromise } from "@raycast/utils";
@@ -250,10 +245,12 @@ async function handleIncreaseBrightness(light: Light, mutateLights: MutatePromis
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateLights(increaseLightBrightness(light), {
+    await mutateLights(adjustBrightness(light, "increase"), {
       optimisticUpdate(lights) {
         return lights?.map((it) =>
-          it.id === light.id ? { ...it, state: { ...it.state, on: true, bri: calcIncreasedBrightness(light.state) } } : it
+          it.id === light.id
+            ? { ...it, state: { ...it.state, on: true, bri: calculateAdjustedBrightness(light, "increase") } }
+            : it
         );
       },
     });
@@ -273,10 +270,12 @@ async function handleDecreaseBrightness(light: Light, mutateLights: MutatePromis
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateLights(decreaseLightBrightness(light), {
+    await mutateLights(adjustBrightness(light, "decrease"), {
       optimisticUpdate(lights) {
         return lights.map((it) =>
-          it.id === light.id ? { ...it, state: { ...it.state, on: true, bri: calcDecreasedBrightness(light.state) } } : it
+          it.id === light.id
+            ? { ...it, state: { ...it.state, on: true, bri: calculateAdjustedBrightness(light, "decrease") } }
+            : it
         );
       },
     });
@@ -296,7 +295,7 @@ async function handleSetColor(light: Light, mutateLights: MutatePromise<Light[]>
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateLights(setColor(light, color.value), {
+    await mutateLights(setLightColor(light, color.value), {
       optimisticUpdate(lights) {
         return lights.map((it) =>
           it.id === light.id ? { ...it, state: { ...it.state, on: true, xy: hexToXy(color.value) } } : it
@@ -319,10 +318,10 @@ async function handleIncreaseColorTemperature(light: Light, mutateLights: Mutate
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateLights(increaseColorTemperature(light), {
+    await mutateLights(adjustColorTemperature(light, "increase"), {
       optimisticUpdate(lights) {
         return lights?.map((it) =>
-          it.id === light.id ? { ...it, state: { ...it.state, ct: calcIncreasedColorTemperature(light) } } : it
+          it.id === light.id ? { ...it, state: { ...it.state, ct: calculateAdjustedColorTemperature(light, "increase") } } : it
         );
       },
     });
@@ -342,10 +341,10 @@ async function handleDecreaseColorTemperature(light: Light, mutateLights: Mutate
   const toast = new Toast({ title: "" });
 
   try {
-    await mutateLights(decreaseColorTemperature(light), {
+    await mutateLights(adjustColorTemperature(light, "decrease"), {
       optimisticUpdate(lights) {
         return lights.map((it) =>
-          it.id === light.id ? { ...it, state: { ...it.state, ct: calcDecreasedColorTemperature(light) } } : it
+          it.id === light.id ? { ...it, state: { ...it.state, ct: calculateAdjustedColorTemperature(light, "decrease") } } : it
         );
       },
     });
