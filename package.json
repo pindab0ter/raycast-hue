@@ -41,7 +41,7 @@
     "@raycast/utils": "^1.0.7",
     "@types/node-localstorage": "^1.3.0",
     "@xstate/react": "^3.0.0",
-    "node-hue-api": "^5.0.0-beta.13"
+    "node-hue-api": "^5.0.0-beta.14"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.0.0",

@@ -106,20 +106,20 @@ export async function discoverBridge(): Promise<string> {
     return hueApiResults[0].ipaddress;
   } catch {
     console.info("Could not find a Hue Bridge using MeetHue's public API");
-    console.info("Discovering bridge using UPnP…");
+    console.info("Discovering bridge using mDNS…");
 
-    const upnpResults = await discovery.upnpSearch();
-    if (upnpResults.length === 0) {
+    const mDnsResults = await discovery.mdnsSearch(10_000); // 10 seconds
+    if (mDnsResults.length === 0) {
       throw new Error("Could not find a Hue Bridge");
     }
 
-    const ipAddress = upnpResults[0].ipaddress;
+    const ipAddress = mDnsResults[0].ipaddress;
 
     if (ipAddress === undefined) {
       throw new Error("Could not find a Hue Bridge");
     }
 
-    console.info("Discovered Hue Bridge using UPnP:", ipAddress);
+    console.info("Discovered Hue Bridge using mDNS:", ipAddress);
 
     return ipAddress;
   }
