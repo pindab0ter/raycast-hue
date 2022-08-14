@@ -3,7 +3,7 @@ import { useMachine } from "@xstate/react";
 import { manageHueBridgeMachine } from "./lib/manageHueBridgeMachine";
 import ActionStyle = Alert.ActionStyle;
 
-export default function Command() {
+export default function ManageHueBridge() {
   const [current, send] = useMachine(manageHueBridgeMachine);
 
   const unlinkSavedBridge = async () => {
@@ -16,27 +16,28 @@ export default function Command() {
   let contextActions: JSX.Element[] = [];
   switch (current.value) {
     case "linkWithBridge":
-      contextActions = [<Action title="Link With Bridge" onAction={() => send("LINK")} icon={Icon.Plug} />];
+      contextActions = [<Action key="link" title="Link With Bridge" onAction={() => send("LINK")} icon={Icon.Plug} />];
       break;
     case "noBridgeFound":
     case "failedToLink":
-      contextActions = [<Action title="Retry" onAction={() => send("RETRY")} icon={Icon.Repeat} />];
+      contextActions = [<Action key="retryLink" title="Retry" onAction={() => send("RETRY")} icon={Icon.Repeat} />];
       break;
     case "failedToConnect":
       contextActions = [
-        <Action title="Retry" onAction={() => send("RETRY")} icon={Icon.Repeat} />,
+        <Action key="retryConnect" title="Retry" onAction={() => send("RETRY")} icon={Icon.Repeat} />,
         <Action title="Unlink Saved Hue Bridge" onAction={unlinkSavedBridge} icon={Icon.Trash} />,
       ];
       break;
     case "connected":
       contextActions = [
-        <Action title="Done" onAction={popToRoot} icon={Icon.Check} />,
-        <Action title="Unlink Saved Hue Bridge" onAction={unlinkSavedBridge} icon={Icon.Trash} />,
+        <Action key="done" title="Done" onAction={popToRoot} icon={Icon.Check} />,
+        <Action key="unlink" title="Unlink Saved Hue Bridge" onAction={unlinkSavedBridge} icon={Icon.Trash} />,
       ];
   }
 
   return (
     <Detail
+      key={typeof current.value === "string" ? current.value : "manageHueBridge"}
       isLoading={!current.context.shouldDisplay}
       markdown={current.context.shouldDisplay ? current.context.markdown : null}
       actions={<ActionPanel>{contextActions}</ActionPanel>}
