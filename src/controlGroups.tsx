@@ -27,16 +27,16 @@ export default function Command() {
   if (groupsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
   if (groupsError instanceof CouldNotConnectToHueBridgeError) return <FailedToConnect />;
 
-  const rooms: Room[] = groups.filter((group) => group.type == "Room") as Room[];
-  const entertainmentAreas: Group[] = groups.filter((group) => group.type == "Entertainment");
-  const zones: Group[] = groups.filter((group) => group.type == "Zone");
+  const rooms: Room[] = groups.filter((group: Group) => group.type == "Room") as Room[];
+  const entertainmentAreas: Group[] = groups.filter((group: Group) => group.type == "Entertainment");
+  const zones: Group[] = groups.filter((group: Group) => group.type == "Zone");
 
   return (
     <List isLoading={isLoading}>
       {rooms.length > 0 && (
         <List.Section title="Rooms">
           {rooms.map((room: Room) => {
-            const roomScenes = scenes.filter((scene) => scene.group == room.id);
+            const roomScenes = scenes.filter((scene: Scene) => scene.group == room.id);
             return <Group key={room.id} group={room} mutateGroups={mutateGroups} scenes={roomScenes} />;
           })}
         </List.Section>
@@ -44,7 +44,7 @@ export default function Command() {
       {entertainmentAreas.length > 0 && (
         <List.Section title="Entertainment Areas">
           {zones.map((entertainmentArea: Group) => {
-            const entertainmentAreaScenes = scenes.filter((scene) => scene.group == entertainmentArea.id);
+            const entertainmentAreaScenes = scenes.filter((scene: Scene) => scene.group == entertainmentArea.id);
             return (
               <Group
                 key={entertainmentArea.id}
@@ -59,7 +59,7 @@ export default function Command() {
       {zones.length > 0 && (
         <List.Section title="Zones">
           {zones.map((zone: Group) => {
-            const zoneScenes = scenes.filter((scene) => scene.group == zone.id);
+            const zoneScenes = scenes.filter((scene: Scene) => scene.group == zone.id);
             return <Group key={zone.id} group={zone} mutateGroups={mutateGroups} scenes={zoneScenes} />;
           })}
         </List.Section>
@@ -145,7 +145,7 @@ function TurnAllOffAction({ onTurnAllOff }: { onTurnAllOff?: () => void }) {
 function SetSceneAction(props: { group: Group; scenes: Scene[]; onSetScene: (scene: Scene) => void }) {
   return (
     <ActionPanel.Submenu title="Set Scene" icon={Icon.Image}>
-      {props.scenes.map((scene) => (
+      {props.scenes.map((scene: Scene) => (
         <ActionPanel.Item key={scene.id} title={scene.name} onAction={() => props.onSetScene(scene)} />
       ))}
     </ActionPanel.Submenu>

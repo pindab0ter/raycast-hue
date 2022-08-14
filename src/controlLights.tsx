@@ -22,17 +22,18 @@ import Style = Toast.Style;
 export default function ControlLights() {
   const { isLoading, lights, mutateLights, lightsError, groups } = useHue();
 
-  const rooms = groups.filter((group) => group.type === "Room") as Group[];
-  const entertainmentAreas = groups.filter((group) => group.type === "Entertainment") as Group[];
-  const zones = groups.filter((group) => group.type === "Zone") as Group[];
   if (lightsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
   if (lightsError instanceof CouldNotConnectToHueBridgeError) return <FailedToConnect />;
+
+  const rooms = groups.filter((group: Group) => group.type === "Room") as Group[];
+  const entertainmentAreas = groups.filter((group: Group) => group.type === "Entertainment") as Group[];
+  const zones = groups.filter((group: Group) => group.type === "Zone") as Group[];
 
   const groupTypes = Array.of(rooms, entertainmentAreas, zones);
 
   return (
     <List isLoading={isLoading}>
-      {groupTypes.map((groupType) => {
+      {groupTypes.map((groupType: Group[]): JSX.Element[] => {
         return groupType.map((group: Group) => {
           const groupLights =
             lights.filter((light: Light) => {
@@ -48,10 +49,12 @@ export default function ControlLights() {
 
 function Group(props: { lights: Light[]; group: Group; mutateLights: MutatePromise<Light[]> }) {
   return (
-    <List.Section key={`${props.group.type}.${props.group.name}`} title={props.group.name} subtitle={props.group.type}>
-      {props.lights.map((light) => (
-        <Light key={light.id} light={light} mutateLights={props.mutateLights} />
-      ))}
+    <List.Section key={props.group.id} title={props.group.name} subtitle={props.group.type}>
+      {props.lights.map(
+        (light: Light): JSX.Element => (
+          <Light key={light.id} light={light} mutateLights={props.mutateLights} />
+        )
+      )}
     </List.Section>
   );
 }

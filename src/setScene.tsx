@@ -21,8 +21,8 @@ export default function SetScene() {
 
   return (
     <List isLoading={isLoading}>
-      {groupTypes.map((groupType: Group[]) => {
-        return groupType.map((group: Group) => {
+      {groupTypes.map((groupType: Group[]): JSX.Element[] => {
+        return groupType.map((group: Group): JSX.Element => {
           const groupScenes =
             scenes.filter((scene: Scene) => {
               return scene.group == group.id;
@@ -38,9 +38,11 @@ export default function SetScene() {
 function Group(props: { group: Group; scenes: Scene[]; mutateGroups: MutatePromise<Group[]> }) {
   return (
     <List.Section key={props.group.id} title={props.group.name} subtitle={props.group.type}>
-      {props.scenes.map((scene: Scene) => (
-        <Scene key={scene.id} group={props.group} scene={scene} mutateGroups={props.mutateGroups} />
-      ))}
+      {props.scenes.map(
+        (scene: Scene): JSX.Element => (
+          <Scene key={scene.id} group={props.group} scene={scene} mutateGroups={props.mutateGroups} />
+        )
+      )}
     </List.Section>
   );
 }
@@ -63,13 +65,7 @@ function Scene(props: { group: Group; scene: Scene; mutateGroups: MutatePromise<
 }
 
 function SetSceneAction(props: { group: Group; scene: Scene; onSet: () => void }) {
-  return (
-    <Action
-      title="Set Scene"
-      icon={Icon.Image}
-      onAction={() => props.onSet()}
-    />
-  );
+  return <Action title="Set Scene" icon={Icon.Image} onAction={() => props.onSet()} />;
 }
 
 async function handleSetScene(group: Group, scene: Scene, mutateGroups: MutatePromise<Group[]>) {
