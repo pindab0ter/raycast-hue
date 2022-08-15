@@ -13,7 +13,7 @@ import {
 } from "./lib/hue";
 import { MutatePromise } from "@raycast/utils";
 import { CssColor, Group, Room, Scene } from "./lib/types";
-import { getIconForColor, getLightIcon } from "./lib/utils";
+import { getIconForColor, getLightIcon, mapRange } from "./lib/utils";
 import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEMP_MIN, COLORS } from "./lib/constants";
 import { hexToXy } from "./lib/colors";
 import NoHueBridgeConfigured from "./components/noHueBridgeConfigured";
@@ -290,7 +290,7 @@ async function handleSetScene(group: Group, scene: Scene, mutateGroups: MutatePr
     await mutateGroups(setScene(scene));
 
     toast.style = Style.Success;
-    toast.title = "Set scene";
+    toast.title = `Scene ${scene.name} set`;
     await toast.show();
   } catch (e) {
     toast.style = Style.Failure;

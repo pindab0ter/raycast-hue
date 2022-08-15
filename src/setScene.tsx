@@ -76,7 +76,7 @@ async function handleSetScene(group: Group, scene: Scene, mutateGroups: MutatePr
     await mutateGroups(setScene(scene));
 
     toast.style = Style.Success;
-    toast.title = `Set scene ${scene.name}`;
+    toast.title = `Scene ${scene.name} set`;
     await toast.show();
   } catch (e) {
     toast.style = Style.Failure;
