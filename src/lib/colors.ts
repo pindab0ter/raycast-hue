@@ -1,5 +1,6 @@
 import { LightState, XY } from "./types";
 import { environment } from "@raycast/api";
+import { mapRange } from "./utils";
 
 export function hexToXy(color: string) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
@@ -113,7 +114,7 @@ export function ctToRgb(mireds: number, brightness: number): string {
     blue = 255;
   }
 
-  const [shadedRed, shadedGreen, shadedBlue] = logShadeRgb(red, green, blue, -(1 - brightness / 254));
+  const [shadedRed, shadedGreen, shadedBlue] = logShadeRgb(red, green, blue, mapRange(brightness, [1, 254], [-0.9, 0]));
 
   return `rgb(${shadedRed},${shadedGreen},${shadedBlue})`;
 }
