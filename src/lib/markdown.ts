@@ -1,15 +1,15 @@
 import { environment } from "@raycast/api";
-import { join } from "path";
+import { pathToFileURL } from "url";
 
-const successImage = `file://${join(environment.assetsPath, "bridge-success.png")}`;
-const failureImage = `file://${join(environment.assetsPath, "bridge-failure.png")}`;
-const connectImage = `file://${join(environment.assetsPath, "bridge-connect.png")}`;
-const buttonImage = `file://${join(environment.assetsPath, "bridge-button.png")}`;
+const successImagePath = pathToFileURL(`${environment.assetsPath}/bridge-success.png`).href;
+const failureImagePath = pathToFileURL(`${environment.assetsPath}/bridge-failure.png`).href;
+const connectImagePath = pathToFileURL(`${environment.assetsPath}/bridge-connect.png`).href;
+const buttonImagePath = pathToFileURL(`${environment.assetsPath}/bridge-button.png`).href;
 
 export const noBridgeConfiguredMessage = `
 # No Hue Bridge Configured
 
-![Not Found](${connectImage})
+![Not Found](${connectImagePath})
 
 Please use the ‘Manage Hue Bridge’ command to link your Hue Bridge.
 `;
@@ -17,7 +17,7 @@ Please use the ‘Manage Hue Bridge’ command to link your Hue Bridge.
 export const bridgeNotFoundMessage = `
 # Could not find the Hue Bridge
 
-![Failure](${failureImage})
+![Failure](${failureImagePath})
 
 Please check your network connection and make sure you are connected to the same network as your Hue Bridge.
 
@@ -27,7 +27,7 @@ You can remove your saved Hue Bridge from the ‘Manage Hue Bridge’ command.
 export const noBridgeFoundMessage = `
 # No Hue Bridge found
 
-![Not Found](${connectImage})
+![Not Found](${connectImagePath})
 
 Your Hue Bridge must be switched on, plugged into your router via an Ethernet cable and connected to the same Wi-Fi network as your device. All three blue lights on the Hue Bridge should be on.
 `;
@@ -35,7 +35,7 @@ Your Hue Bridge must be switched on, plugged into your router via an Ethernet ca
 export const linkWithBridgeMessage = `
 # Hue Bridge found
 
-![Press Button](${buttonImage})
+![Press Button](${buttonImagePath})
 
 Press the button in the center and use the ‘Link With Bridge’ action to connect.
 `;
@@ -43,7 +43,7 @@ Press the button in the center and use the ‘Link With Bridge’ action to conn
 export const failedToLinkMessage = `
 # Failed to link with the Hue Bridge
 
-![Failure](${failureImage})
+![Failure](${failureImagePath})
 
 Press the button in the center and use the ‘Retry’ action to connect.
 `;
@@ -51,7 +51,7 @@ Press the button in the center and use the ‘Retry’ action to connect.
 export const failedToConnectMessage = `
 # Could not find the saved Hue Bridge
 
-![Failure](${failureImage})
+![Failure](${failureImagePath})
 
 Please check your network connection and make sure you are connected to the same network as your Hue Bridge.
 
@@ -61,7 +61,7 @@ You can remove your saved Hue Bridge by using the ‘Remove Saved Hue Bridge’ 
 export const connectedMessage = `
 # Connected to your Hue Bridge
 
-![Success](${successImage})
+![Success](${successImagePath})
 
 The extension is now linked to your Hue Bridge.
 
