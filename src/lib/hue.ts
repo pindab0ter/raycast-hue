@@ -20,6 +20,23 @@ import { getTransitionTimeInMs } from "./utils";
 
 let _api: Api;
 
+export async function getAuthenticatedApi(): Promise<Api> {
+  if (_api) return _api;
+
+  const bridgeIpAddress = await LocalStorage.getItem<string>(BRIDGE_IP_ADDRESS_KEY);
+  const bridgeUsername = await LocalStorage.getItem<string>(BRIDGE_USERNAME_KEY);
+
+  if (!bridgeIpAddress || !bridgeUsername) throw new NoHueBridgeConfiguredError();
+
+  try {
+    _api = await v3.api.createLocal(bridgeIpAddress).connect(bridgeUsername);
+  } catch (error) {
+    throw new CouldNotConnectToHueBridgeError();
+  }
+
+  return _api;
+}
+
 // TODO: Replace with Hue API V2 (for which there is no library yet) to enable more features.
 //  An example is lights have types (e.g. ‘Desk Lamp’ or ‘Ceiling Fixture’) which can be used to display relevant icons instead of circles.
 // TODO: Rapid successive calls to mutate functions will result in the optimistic updates and API results being out of sync.
@@ -90,23 +107,6 @@ export function useHue() {
     scenes,
     scenesError,
   };
-}
-
-export async function getAuthenticatedApi(): Promise<Api> {
-  if (_api) return _api;
-
-  const bridgeIpAddress = await LocalStorage.getItem<string>(BRIDGE_IP_ADDRESS_KEY);
-  const bridgeUsername = await LocalStorage.getItem<string>(BRIDGE_USERNAME_KEY);
-
-  if (!bridgeIpAddress || !bridgeUsername) throw new NoHueBridgeConfiguredError();
-
-  try {
-    _api = await v3.api.createLocal(bridgeIpAddress).connect(bridgeUsername);
-  } catch (error) {
-    throw new CouldNotConnectToHueBridgeError();
-  }
-
-  return _api;
 }
 
 /**
