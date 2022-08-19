@@ -11,7 +11,7 @@ export function getLightIcon(lightState: LightState) {
   const progress = lightState.on ? mapRange(lightState.bri, [1, 254], [0.1, 1]) : 0;
   const color = getRgbFrom(lightState);
 
-  return getProgressIcon(progress, color, { background: "green" });
+  return getProgressIcon(progress, color);
 }
 
 export function getIconForColor(color: CssColor): Image {
