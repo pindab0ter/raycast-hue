@@ -66,6 +66,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
           id: "discoverBridge",
           src: discoverBridge,
           onDone: {
+            // TODO: Handle finding multiple bridges by offering the user to select one
             actions: assign({ bridgeIpAddress: (context, event) => event.data }),
             target: "linkWithBridge",
           },
