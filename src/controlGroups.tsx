@@ -13,7 +13,7 @@ import {
 } from "./lib/hue";
 import { MutatePromise } from "@raycast/utils";
 import { CssColor, Group, Room, Scene } from "./lib/types";
-import { getIconForColor, getLightIcon, mapRange } from "./lib/utils";
+import { getIconForColor, getLightIcon } from "./lib/utils";
 import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEMP_MIN, COLORS } from "./lib/constants";
 import { hexToXy } from "./lib/colors";
 import NoHueBridgeConfigured from "./components/noHueBridgeConfigured";
@@ -246,8 +246,15 @@ async function handleTurnAllOn(group: Group, mutateGroups: MutatePromise<Group[]
   try {
     await mutateGroups(turnGroupOn(group), {
       optimisticUpdate(groups) {
-        // TODO: Figure out why this doesn't update the state
-        return groups.map((it) => (it.id === group.id ? { ...it, state: { any_on: true, all_on: true } } : it));
+        return groups.map((it) =>
+          it.id === group.id
+            ? {
+                ...it,
+                state: { any_on: true, all_on: true },
+                action: { ...it.action, on: true },
+              }
+            : it
+        );
       },
     });
 
@@ -268,7 +275,15 @@ async function handleTurnAllOff(group: Group, mutateGroups: MutatePromise<Group[
   try {
     await mutateGroups(turnGroupOff(group), {
       optimisticUpdate(groups) {
-        return groups?.map((it) => (it.id === group.id ? { ...it, state: { any_on: false, all_on: false } } : it));
+        return groups?.map((it) =>
+          it.id === group.id
+            ? {
+                ...it,
+                state: { any_on: false, all_on: false },
+                action: { ...it.action, on: false },
+              }
+            : it
+        );
       },
     });
 

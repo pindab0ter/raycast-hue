@@ -5,7 +5,7 @@ export const BRIDGE_IP_ADDRESS_KEY = "bridgeIpAddress";
 export const BRIDGE_USERNAME_KEY = "bridgeUsername";
 
 export const BRIGHTNESSES = [1].concat(Array.from(Array(10).keys()).map((i) => i * 10 + 10)).reverse();
-// TODO: Replace with lookup table so that each step corresponds to an 10% value increment and use setBrightness instead of increase/decrease
+// TODO: Replace with lookup table so that each step corresponds to an 10% value increment and use setBrightness instead of increase/decrease to prevent 9% or 11% steps due to rounding errors.
 export const BRIGHTNESS_STEP = 25.4;
 export const BRIGHTNESS_MAX = 254;
 export const BRIGHTNESS_MIN = 1;
