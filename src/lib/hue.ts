@@ -20,6 +20,11 @@ import { getTransitionTimeInMs } from "./utils";
 
 let _api: Api;
 
+// TODO: Replace with Hue API V2 (for which there is no library yet) to enable more features.
+//  An example is lights have types (e.g. ‘Desk Lamp’ or ‘Ceiling Fixture’) which can be used to display relevant icons instead of circles.
+// TODO: Rapid successive calls to mutate functions will result in the optimistic updates and API results being out of sync.
+//  This happens for example when holding or successively using the 'Increase' or 'Decrease Brightness' action.
+//  This is especially noticeable on groups, since those API calls take longer than those for individual lights.
 export function useHue() {
   const {
     isLoading: isLoadingLights,

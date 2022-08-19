@@ -72,7 +72,6 @@ function Light(props: { light: Light; group: Group; mutateLights: MutatePromise<
               light={props.light}
               onSet={(percentage: number) => handleSetBrightness(props.light, props.mutateLights, percentage)}
             />
-            {/* TODO: Handle holding the key combo properly */}
             <IncreaseBrightnessAction
               light={props.light}
               onIncrease={() => handleIncreaseBrightness(props.light, props.mutateLights)}
