@@ -1,4 +1,4 @@
-import { ActionPanel, Icon, List, Toast } from "@raycast/api";
+import { Action, ActionPanel, Alert, confirmAlert, Icon, List, Toast } from "@raycast/api";
 import {
   adjustBrightness,
   adjustColorTemperature,
@@ -16,20 +16,19 @@ import { CssColor, Group, Room, Scene } from "./lib/types";
 import { getIconForColor, getLightIcon } from "./lib/utils";
 import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEMP_MIN, COLORS } from "./lib/constants";
 import { hexToXy } from "./lib/colors";
-import NoHueBridgeConfigured from "./components/noHueBridgeConfigured";
-import BridgeNotFound from "./components/bridgeNotFound";
-import { CouldNotConnectToHueBridgeError, NoHueBridgeConfiguredError } from "./lib/errors";
+import manageHueBridge from "./manageHueBridge";
 import Style = Toast.Style;
+import ActionStyle = Alert.ActionStyle;
 
 export default function Command() {
-  const { isLoading, groups, mutateGroups, groupsError, scenes } = useHue();
+  const { isLoading, groups, mutateGroups, scenes } = useHue();
+  const { element, unlinkHue } = manageHueBridge();
+
+  if (element !== null) return element;
 
   const rooms: Room[] = groups.filter((group: Group) => group.type == "Room") as Room[];
   const entertainmentAreas: Group[] = groups.filter((group: Group) => group.type == "Entertainment");
   const zones: Group[] = groups.filter((group: Group) => group.type == "Zone");
-
-  if (groupsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
-  if (groupsError instanceof CouldNotConnectToHueBridgeError) return <BridgeNotFound />;
 
   return (
     <List isLoading={isLoading}>
@@ -37,7 +36,9 @@ export default function Command() {
         <List.Section title="Rooms">
           {rooms.map((room: Room) => {
             const roomScenes = scenes.filter((scene: Scene) => scene.group == room.id);
-            return <Group key={room.id} group={room} mutateGroups={mutateGroups} scenes={roomScenes} />;
+            return (
+              <Group key={room.id} group={room} mutateGroups={mutateGroups} scenes={roomScenes} unlinkHue={unlinkHue} />
+            );
           })}
         </List.Section>
       )}
@@ -51,6 +52,7 @@ export default function Command() {
                 group={entertainmentArea}
                 mutateGroups={mutateGroups}
                 scenes={entertainmentAreaScenes}
+                unlinkHue={unlinkHue}
               />
             );
           })}
@@ -60,7 +62,9 @@ export default function Command() {
         <List.Section title="Zones">
           {zones.map((zone: Group) => {
             const zoneScenes = scenes.filter((scene: Scene) => scene.group == zone.id);
-            return <Group key={zone.id} group={zone} mutateGroups={mutateGroups} scenes={zoneScenes} />;
+            return (
+              <Group key={zone.id} group={zone} mutateGroups={mutateGroups} scenes={zoneScenes} unlinkHue={unlinkHue} />
+            );
           })}
         </List.Section>
       )}
@@ -68,7 +72,7 @@ export default function Command() {
   );
 }
 
-function Group(props: { group: Group; mutateGroups: MutatePromise<Group[]>; scenes?: Scene[] }) {
+function Group(props: { group: Group; mutateGroups: MutatePromise<Group[]>; scenes?: Scene[]; unlinkHue: () => void }) {
   return (
     <List.Item
       key={props.group.id}
@@ -127,6 +131,15 @@ function Group(props: { group: Group; mutateGroups: MutatePromise<Group[]>; scen
 
           <ActionPanel.Section>
             <RefreshAction onRefresh={() => props.mutateGroups()} />
+          </ActionPanel.Section>
+
+          <ActionPanel.Section>
+            <Action
+              key="unlink"
+              title="Unlink Saved Hue Bridge"
+              onAction={() => unlinkSavedBridge(props.unlinkHue)}
+              icon={Icon.Trash}
+            />
           </ActionPanel.Section>
         </ActionPanel>
       }
@@ -460,4 +473,11 @@ async function handleDecreaseColorTemperature(group: Group, mutateGroups: Mutate
     toast.message = e instanceof Error ? e.message : undefined;
     await toast.show();
   }
+}
+
+async function unlinkSavedBridge(unlinkHue: () => void) {
+  await confirmAlert({
+    title: "Are you sure you want to unlink the configured Hue Bridge?",
+    primaryAction: { title: "Remove", style: ActionStyle.Destructive, onAction: () => unlinkHue() },
+  });
 }

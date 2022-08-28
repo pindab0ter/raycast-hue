@@ -4,6 +4,7 @@ import { manageHueBridgeMachine } from "./lib/manageHueBridgeMachine";
 import ActionStyle = Alert.ActionStyle;
 
 export default function ManageHueBridge() {
+  // TODO: Move into useHue
   const [current, send] = useMachine(manageHueBridgeMachine);
 
   const unlinkSavedBridge = async () => {
@@ -11,6 +12,11 @@ export default function ManageHueBridge() {
       title: "Are you sure you want to unlink the configured Hue Bridge?",
       primaryAction: { title: "Remove", style: ActionStyle.Destructive, onAction: () => send("UNLINK") },
     });
+  };
+
+  const unlinkHue = () => {
+    send("UNLINK");
+    // TODO: Remove all known lights and groups
   };
 
   let contextActions: JSX.Element[] = [];
@@ -35,12 +41,26 @@ export default function ManageHueBridge() {
       ];
   }
 
-  return (
-    <Detail
-      key={typeof current.value === "string" ? current.value : "manageHueBridge"}
-      isLoading={!current.context.shouldDisplay}
-      markdown={current.context.shouldDisplay ? current.context.markdown : null}
-      actions={<ActionPanel>{contextActions}</ActionPanel>}
-    />
-  );
+  let element = null;
+
+  switch (current.value) {
+    case "linkWithBridge":
+    case "noBridgeFound":
+    case "failedToLink":
+    case "failedToConnect":
+    case "connected":
+      element = (
+        <Detail
+          key={typeof current.value === "string" ? current.value : "manageHueBridge"}
+          isLoading={!current.context.shouldDisplay}
+          markdown={current.context.shouldDisplay ? current.context.markdown : null}
+          actions={<ActionPanel>{contextActions}</ActionPanel>}
+        />
+      );
+  }
+
+  return {
+    element: element,
+    unlinkHue: unlinkHue,
+  };
 }
