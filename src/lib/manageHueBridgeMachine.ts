@@ -117,8 +117,6 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
         },
       },
       connecting: {
-        entry: "showConnecting",
-        exit: "hideToast",
         invoke: {
           id: "connectToBridge",
           src: async (context) => {
@@ -142,6 +140,9 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
           },
         },
       },
+      // TODO: Rename to 'linked' and have 'connected' be the final no-op stage.
+      //   That way, a successful link has a screen, but you don't get anything
+      //   when everything works like it should.
       connected: {
         entry: "showConnected",
         invoke: {
@@ -185,11 +186,6 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
       showLinking: async (context) => {
         context.toast.style = Style.Animated;
         context.toast.title = "Linking…";
-        context.toast.show().then();
-      },
-      showConnecting: async (context) => {
-        context.toast.style = Style.Animated;
-        context.toast.title = "Connecting…";
         context.toast.show().then();
       },
       showLinkWithBridge: (context) => {

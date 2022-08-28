@@ -2,9 +2,6 @@ import { Action, ActionPanel, Icon, List, Toast } from "@raycast/api";
 import { setScene, useHue } from "./lib/hue";
 import { MutatePromise } from "@raycast/utils";
 import { Group, Scene } from "./lib/types";
-import { CouldNotConnectToHueBridgeError, NoHueBridgeConfiguredError } from "./lib/errors";
-import NoHueBridgeConfigured from "./components/noHueBridgeConfigured";
-import BridgeNotFound from "./components/bridgeNotFound";
 import Style = Toast.Style;
 
 export default function SetScene() {
@@ -13,10 +10,6 @@ export default function SetScene() {
   const rooms = groups.filter((group) => group.type === "Room") as Group[];
   const entertainmentAreas = groups.filter((group) => group.type === "Entertainment") as Group[];
   const zones = groups.filter((group) => group.type === "Zone") as Group[];
-
-  if (lightsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
-  if (lightsError instanceof CouldNotConnectToHueBridgeError) return <BridgeNotFound />;
-
   const groupTypes = Array.of(rooms, entertainmentAreas, zones);
 
   return (

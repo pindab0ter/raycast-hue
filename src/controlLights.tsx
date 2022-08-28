@@ -14,21 +14,19 @@ import { getIconForColor, getLightIcon } from "./lib/utils";
 import { MutatePromise } from "@raycast/utils";
 import { CssColor, Group, Light } from "./lib/types";
 import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEMP_MIN, COLORS } from "./lib/constants";
-import { CouldNotConnectToHueBridgeError, NoHueBridgeConfiguredError } from "./lib/errors";
-import NoHueBridgeConfigured from "./components/noHueBridgeConfigured";
-import BridgeNotFound from "./components/bridgeNotFound";
+import ManageHueBridge from "./components/ManageHueBridge";
 import Style = Toast.Style;
 
 export default function ControlLights() {
-  const { isLoading, lights, mutateLights, lightsError, groups } = useHue();
+  const { hueBridgeState, sendHueMessage, isLoading, lights, mutateLights, groups } = useHue();
+  const manageHueBridgeElement: JSX.Element | null = ManageHueBridge(hueBridgeState, sendHueMessage);
+
+  if (manageHueBridgeElement !== null) return manageHueBridgeElement;
 
   const rooms = groups.filter((group: Group) => group.type === "Room") as Group[];
   const entertainmentAreas = groups.filter((group: Group) => group.type === "Entertainment") as Group[];
   const zones = groups.filter((group: Group) => group.type === "Zone") as Group[];
   const groupTypes = Array.of(rooms, entertainmentAreas, zones);
-
-  if (lightsError instanceof NoHueBridgeConfiguredError) return <NoHueBridgeConfigured />;
-  if (lightsError instanceof CouldNotConnectToHueBridgeError) return <BridgeNotFound />;
 
   return (
     <List isLoading={isLoading}>

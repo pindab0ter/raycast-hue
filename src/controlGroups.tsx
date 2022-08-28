@@ -16,15 +16,15 @@ import { CssColor, Group, Room, Scene } from "./lib/types";
 import { getIconForColor, getLightIcon } from "./lib/utils";
 import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEMP_MIN, COLORS } from "./lib/constants";
 import { hexToXy } from "./lib/colors";
-import manageHueBridge from "./manageHueBridge";
+import ManageHueBridge from "./components/ManageHueBridge";
 import Style = Toast.Style;
 import ActionStyle = Alert.ActionStyle;
 
 export default function Command() {
-  const { isLoading, groups, mutateGroups, scenes } = useHue();
-  const { element, unlinkHue } = manageHueBridge();
+  const { hueBridgeState, sendHueMessage, isLoading, groups, mutateGroups, scenes } = useHue();
+  const manageHueBridgeElement: JSX.Element | null = ManageHueBridge(hueBridgeState, sendHueMessage);
 
-  if (element !== null) return element;
+  if (manageHueBridgeElement !== null) return manageHueBridgeElement;
 
   const rooms: Room[] = groups.filter((group: Group) => group.type == "Room") as Room[];
   const entertainmentAreas: Group[] = groups.filter((group: Group) => group.type == "Entertainment");
@@ -37,7 +37,13 @@ export default function Command() {
           {rooms.map((room: Room) => {
             const roomScenes = scenes.filter((scene: Scene) => scene.group == room.id);
             return (
-              <Group key={room.id} group={room} mutateGroups={mutateGroups} scenes={roomScenes} unlinkHue={unlinkHue} />
+              <Group
+                key={room.id}
+                group={room}
+                mutateGroups={mutateGroups}
+                scenes={roomScenes}
+                unlinkHue={() => sendHueMessage("unlink")}
+              />
             );
           })}
         </List.Section>
@@ -52,7 +58,7 @@ export default function Command() {
                 group={entertainmentArea}
                 mutateGroups={mutateGroups}
                 scenes={entertainmentAreaScenes}
-                unlinkHue={unlinkHue}
+                unlinkHue={() => sendHueMessage("unlink")}
               />
             );
           })}
@@ -63,7 +69,13 @@ export default function Command() {
           {zones.map((zone: Group) => {
             const zoneScenes = scenes.filter((scene: Scene) => scene.group == zone.id);
             return (
-              <Group key={zone.id} group={zone} mutateGroups={mutateGroups} scenes={zoneScenes} unlinkHue={unlinkHue} />
+              <Group
+                key={zone.id}
+                group={zone}
+                mutateGroups={mutateGroups}
+                scenes={zoneScenes}
+                unlinkHue={() => sendHueMessage("unlink")}
+              />
             );
           })}
         </List.Section>

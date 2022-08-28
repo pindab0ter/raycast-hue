@@ -17,6 +17,8 @@ import {
 } from "./constants";
 import { CouldNotConnectToHueBridgeError, NoHueBridgeConfiguredError } from "./errors";
 import { getTransitionTimeInMs } from "./utils";
+import { useMachine } from "@xstate/react";
+import { manageHueBridgeMachine } from "./manageHueBridgeMachine";
 
 let _api: Api;
 
@@ -43,11 +45,12 @@ export async function getAuthenticatedApi(): Promise<Api> {
 //  This happens for example when holding or successively using the 'Increase' or 'Decrease Brightness' action.
 //  This is especially noticeable on groups, since those API calls take longer than those for individual lights.
 export function useHue() {
+  const [hueBridgeState, send] = useMachine(manageHueBridgeMachine);
+
   const {
     isLoading: isLoadingLights,
     data: lights,
     mutate: mutateLights,
-    error: lightsError,
   } = useCachedPromise(
     async () => {
       const api = await getAuthenticatedApi();
@@ -65,7 +68,6 @@ export function useHue() {
     isLoading: isLoadingGroups,
     data: groups,
     mutate: mutateGroups,
-    error: groupsError,
   } = useCachedPromise(
     async () => {
       const api = await getAuthenticatedApi();
@@ -79,11 +81,7 @@ export function useHue() {
     }
   );
 
-  const {
-    isLoading: isLoadingScenes,
-    data: scenes,
-    error: scenesError,
-  } = useCachedPromise(
+  const { isLoading: isLoadingScenes, data: scenes } = useCachedPromise(
     async () => {
       const api = await getAuthenticatedApi();
       const scenes = await api.scenes.getAll();
@@ -96,16 +94,23 @@ export function useHue() {
     }
   );
 
+  const sendHueMessage = (message: "link" | "retry" | "unlink") => {
+    if (message === "unlink") {
+      // TODO: Remove all lights, groups and scenes
+    }
+
+    send(message.toUpperCase());
+  };
+
   return {
-    isLoading: isLoadingLights || isLoadingGroups || isLoadingScenes,
+    hueBridgeState,
+    sendHueMessage,
+    isLoading: hueBridgeState.context.shouldDisplay || isLoadingLights || isLoadingGroups || isLoadingScenes,
     lights,
     mutateLights,
-    lightsError,
     groups,
     mutateGroups,
-    groupsError,
     scenes,
-    scenesError,
   };
 }
 
