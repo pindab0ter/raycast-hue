@@ -2,6 +2,7 @@ import { Action, ActionPanel, Alert, confirmAlert, Detail, Icon, popToRoot } fro
 import { AnyEventObject, BaseActionObject, ResolveTypegenMeta, ServiceMap, State, TypegenDisabled } from "xstate";
 import { HueContext } from "../lib/manageHueBridgeMachine";
 import ActionStyle = Alert.ActionStyle;
+import { SendHueMessage } from "../lib/hue";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default function ManageHueBridge(
@@ -12,7 +13,7 @@ export default function ManageHueBridge(
     { value: any; context: HueContext },
     ResolveTypegenMeta<TypegenDisabled, AnyEventObject, BaseActionObject, ServiceMap>
   >,
-  sendHueMessage: (message: "link" | "retry" | "unlink") => void
+  sendHueMessage: SendHueMessage
 ): JSX.Element | null {
   const unlinkSavedBridge = async () => {
     await confirmAlert({
@@ -40,9 +41,9 @@ export default function ManageHueBridge(
         <Action title="Unlink Saved Hue Bridge" onAction={unlinkSavedBridge} icon={Icon.Trash} />,
       ];
       break;
-    case "connected":
+    case "linked":
       contextActions = [
-        <Action key="done" title="Done" onAction={popToRoot} icon={Icon.Check} />,
+        <Action key="done" title="Done" onAction={() => sendHueMessage("done")} icon={Icon.Check} />,
         <Action key="unlink" title="Unlink Saved Hue Bridge" onAction={unlinkSavedBridge} icon={Icon.Trash} />,
       ];
   }

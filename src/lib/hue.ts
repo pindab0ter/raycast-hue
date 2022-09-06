@@ -40,6 +40,8 @@ export async function getAuthenticatedApi(): Promise<Api> {
   return _api;
 }
 
+export type SendHueMessage = (message: "link" | "retry" | "done" | "unlink") => void;
+
 // TODO: Replace with Hue API V2 (for which there is no library yet) to enable more features.
 //  An example is lights have types (e.g. ‘Desk Lamp’ or ‘Ceiling Fixture’) which can be used to display relevant icons instead of circles.
 // TODO: Rapid successive calls to mutate functions will result in the optimistic updates and API results being out of sync.
@@ -98,7 +100,7 @@ export function useHue() {
     }
   );
 
-  const sendHueMessage = (message: "link" | "retry" | "unlink") => {
+  const sendHueMessage: SendHueMessage = (message: "link" | "retry" | "done" | "unlink") => {
     send(message.toUpperCase());
   };
 

@@ -1,9 +1,10 @@
-import { Action, ActionPanel, Alert, confirmAlert, Icon, List, Toast } from "@raycast/api";
+import { Action, ActionPanel, Icon, List, Toast } from "@raycast/api";
 import {
   adjustBrightness,
   adjustColorTemperature,
   calculateAdjustedBrightness,
   calculateAdjustedColorTemperature,
+  SendHueMessage,
   setGroupBrightness,
   setGroupColor,
   setScene,
@@ -18,12 +19,12 @@ import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEM
 import { hexToXy } from "./lib/colors";
 import ManageHueBridge from "./components/ManageHueBridge";
 import Style = Toast.Style;
-import ActionStyle = Alert.ActionStyle;
+import UnlinkAction from "./components/UnlinkAction";
 
 export default function Command() {
   const { hueBridgeState, sendHueMessage, isLoading, groups, mutateGroups, scenes } = useHue();
-  const manageHueBridgeElement: JSX.Element | null = ManageHueBridge(hueBridgeState, sendHueMessage);
 
+  const manageHueBridgeElement: JSX.Element | null = ManageHueBridge(hueBridgeState, sendHueMessage);
   if (manageHueBridgeElement !== null) return manageHueBridgeElement;
 
   const rooms: Room[] = groups.filter((group: Group) => group.type == "Room") as Room[];
@@ -42,7 +43,7 @@ export default function Command() {
                 group={room}
                 mutateGroups={mutateGroups}
                 scenes={roomScenes}
-                unlinkHue={() => sendHueMessage("unlink")}
+                sendHueMessage={sendHueMessage}
               />
             );
           })}
@@ -58,7 +59,7 @@ export default function Command() {
                 group={entertainmentArea}
                 mutateGroups={mutateGroups}
                 scenes={entertainmentAreaScenes}
-                unlinkHue={() => sendHueMessage("unlink")}
+                sendHueMessage={sendHueMessage}
               />
             );
           })}
@@ -74,7 +75,7 @@ export default function Command() {
                 group={zone}
                 mutateGroups={mutateGroups}
                 scenes={zoneScenes}
-                unlinkHue={() => sendHueMessage("unlink")}
+                sendHueMessage={sendHueMessage}
               />
             );
           })}
@@ -84,7 +85,12 @@ export default function Command() {
   );
 }
 
-function Group(props: { group: Group; mutateGroups: MutatePromise<Group[]>; scenes?: Scene[]; unlinkHue: () => void }) {
+function Group(props: {
+  group: Group;
+  mutateGroups: MutatePromise<Group[]>;
+  scenes?: Scene[];
+  sendHueMessage: SendHueMessage;
+}) {
   return (
     <List.Item
       key={props.group.id}
@@ -143,15 +149,7 @@ function Group(props: { group: Group; mutateGroups: MutatePromise<Group[]>; scen
 
           <ActionPanel.Section>
             <RefreshAction onRefresh={() => props.mutateGroups()} />
-          </ActionPanel.Section>
-
-          <ActionPanel.Section>
-            <Action
-              key="unlink"
-              title="Unlink Saved Hue Bridge"
-              onAction={() => unlinkSavedBridge(props.unlinkHue)}
-              icon={Icon.Trash}
-            />
+            <UnlinkAction sendHueMessage={props.sendHueMessage} />
           </ActionPanel.Section>
         </ActionPanel>
       }
@@ -485,11 +483,4 @@ async function handleDecreaseColorTemperature(group: Group, mutateGroups: Mutate
     toast.message = e instanceof Error ? e.message : undefined;
     await toast.show();
   }
-}
-
-async function unlinkSavedBridge(unlinkHue: () => void) {
-  await confirmAlert({
-    title: "Are you sure you want to unlink the configured Hue Bridge?",
-    primaryAction: { title: "Remove", style: ActionStyle.Destructive, onAction: () => unlinkHue() },
-  });
 }

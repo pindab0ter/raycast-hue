@@ -36,6 +36,11 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
       actions: [],
       toast: new Toast({ style: Style.Animated, title: "" }),
     },
+    on: {
+      UNLINK: {
+        target: "unlinking",
+      },
+    },
     states: {
       loadCredentials: {
         invoke: {
@@ -93,6 +98,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
       },
       linking: {
         entry: "showLinking",
+        exit: "hideToast",
         invoke: {
           id: "linking",
           src: async (context) => {
@@ -100,7 +106,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
             return await linkWithBridge(context.bridgeIpAddress);
           },
           onDone: {
-            target: "connecting",
+            target: "linked",
             actions: assign({ bridgeUsername: (context, event) => event.data }),
           },
           onError: {
@@ -118,6 +124,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
       },
       linked: {
         entry: "showLinked",
+        exit: "stopShowing",
         invoke: {
           id: "saveCredentials",
           src: async (context) => {
@@ -128,8 +135,8 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
           },
         },
         on: {
-          UNLINK: {
-            target: "unlinking",
+          DONE: {
+            target: "connecting",
           },
         },
       },
@@ -204,6 +211,10 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
       showLinked: (context) => {
         context.shouldDisplay = true;
         context.markdown = linkedMessage;
+      },
+      stopShowing: (context) => {
+        context.shouldDisplay = false;
+        context.markdown = undefined;
       },
       hideToast: async (context) => {
         context.toast.hide().then();
