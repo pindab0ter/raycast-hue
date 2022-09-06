@@ -47,23 +47,12 @@ export default function ManageHueBridge(
       ];
   }
 
-  let element = null;
-
-  switch (hueBridgeState.value) {
-    case "linkWithBridge":
-    case "noBridgeFound":
-    case "failedToLink":
-    case "failedToConnect":
-    case "connected":
-      element = (
-        <Detail
-          key={hueBridgeState.value}
-          isLoading={!hueBridgeState.context.shouldDisplay}
-          markdown={hueBridgeState.context.shouldDisplay ? hueBridgeState.context.markdown : null}
-          actions={<ActionPanel>{contextActions}</ActionPanel>}
-        />
-      );
-  }
-
-  return element;
+  return hueBridgeState.context.shouldDisplay ? (
+    <Detail
+      key={`${hueBridgeState.value}`}
+      isLoading={!hueBridgeState.context.shouldDisplay}
+      markdown={hueBridgeState.context.shouldDisplay ? hueBridgeState.context.markdown : null}
+      actions={<ActionPanel>{contextActions}</ActionPanel>}
+    />
+  ) : null;
 }

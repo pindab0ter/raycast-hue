@@ -58,8 +58,8 @@ Please check your network connection and make sure you are connected to the same
 You can remove your saved Hue Bridge by using the ‘Remove Saved Hue Bridge’ action.
 `;
 
-export const connectedMessage = `
-# Connected to your Hue Bridge
+export const linkedMessage = `
+# Linked with your Hue Bridge
 
 ![Success](${successImagePath})
 

@@ -2,9 +2,9 @@ import { assign, createMachine } from "xstate";
 import { discoverBridge, linkWithBridge } from "./hue";
 import { LocalStorage, Toast } from "@raycast/api";
 import {
-  connectedMessage,
   failedToConnectMessage,
   failedToLinkMessage,
+  linkedMessage,
   linkWithBridgeMessage,
   noBridgeFoundMessage,
 } from "./markdown";
@@ -116,6 +116,23 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
           },
         },
       },
+      linked: {
+        entry: "showLinked",
+        invoke: {
+          id: "saveCredentials",
+          src: async (context) => {
+            if (context.bridgeIpAddress === undefined) throw Error("No bridge IP address");
+            if (context.bridgeUsername === undefined) throw Error("No bridge username");
+            LocalStorage.setItem(BRIDGE_IP_ADDRESS_KEY, context.bridgeIpAddress).then();
+            LocalStorage.setItem(BRIDGE_USERNAME_KEY, context.bridgeUsername).then();
+          },
+        },
+        on: {
+          UNLINK: {
+            target: "unlinking",
+          },
+        },
+      },
       connecting: {
         invoke: {
           id: "connectToBridge",
@@ -140,26 +157,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
           },
         },
       },
-      // TODO: Rename to 'linked' and have 'connected' be the final no-op stage.
-      //   That way, a successful link has a screen, but you don't get anything
-      //   when everything works like it should.
-      connected: {
-        entry: "showConnected",
-        invoke: {
-          id: "saveCredentials",
-          src: async (context) => {
-            if (context.bridgeIpAddress === undefined) throw Error("No bridge IP address");
-            if (context.bridgeUsername === undefined) throw Error("No bridge username");
-            LocalStorage.setItem(BRIDGE_IP_ADDRESS_KEY, context.bridgeIpAddress).then();
-            LocalStorage.setItem(BRIDGE_USERNAME_KEY, context.bridgeUsername).then();
-          },
-        },
-        on: {
-          UNLINK: {
-            target: "unlinking",
-          },
-        },
-      },
+      connected: {},
       unlinking: {
         invoke: {
           id: "unlinking",
@@ -189,39 +187,24 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
         context.toast.show().then();
       },
       showLinkWithBridge: (context) => {
-        context.toast.style = Style.Success;
-        context.toast.title = "Hue Bridge found";
-        context.toast.show().then();
         context.shouldDisplay = true;
         context.markdown = linkWithBridgeMessage;
       },
       showNoBridgeFound: (context) => {
-        context.toast.style = Style.Failure;
-        context.toast.title = "No Hue Bridge found";
-        context.toast.show().then();
         context.shouldDisplay = true;
         context.markdown = noBridgeFoundMessage;
       },
       showFailedToConnect: (context) => {
-        context.toast.style = Style.Failure;
-        context.toast.title = "Failed to connect";
-        context.toast.show().then();
         context.shouldDisplay = true;
         context.markdown = failedToConnectMessage;
       },
       showFailedToLink: (context) => {
-        context.toast.style = Style.Failure;
-        context.toast.title = "Failed to link";
-        context.toast.show().then();
         context.shouldDisplay = true;
         context.markdown = failedToLinkMessage;
       },
-      showConnected: (context) => {
-        context.toast.style = Style.Success;
-        context.toast.title = "Connected";
-        context.toast.show().then();
+      showLinked: (context) => {
         context.shouldDisplay = true;
-        context.markdown = connectedMessage;
+        context.markdown = linkedMessage;
       },
       hideToast: async (context) => {
         context.toast.hide().then();
