@@ -1,6 +1,6 @@
 import { discovery, v3 } from "node-hue-api";
 import { Api } from "node-hue-api/dist/esm/api/Api";
-import { LocalStorage } from "@raycast/api";
+import { LocalStorage, showToast, Toast } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
 import { Group, Light, Scene } from "./types";
 import { hexToXy } from "./colors";
@@ -19,6 +19,7 @@ import { CouldNotConnectToHueBridgeError, NoHueBridgeConfiguredError } from "./e
 import { getTransitionTimeInMs } from "./utils";
 import { useMachine } from "@xstate/react";
 import { manageHueBridgeMachine } from "./manageHueBridgeMachine";
+import Style = Toast.Style;
 
 let _api: Api;
 
@@ -61,6 +62,7 @@ export function useHue() {
     {
       keepPreviousData: true,
       initialData: [] as Light[],
+      onError: handleError,
     }
   );
 
@@ -78,6 +80,7 @@ export function useHue() {
     {
       keepPreviousData: true,
       initialData: [] as Group[],
+      onError: handleError,
     }
   );
 
@@ -91,6 +94,7 @@ export function useHue() {
     {
       keepPreviousData: true,
       initialData: [] as Scene[],
+      onError: handleError,
     }
   );
 
@@ -112,6 +116,17 @@ export function useHue() {
     mutateGroups,
     scenes,
   };
+}
+
+function handleError(error: Error): void {
+  console.debug({ name: error.name, message: error.message });
+  console.error(error);
+
+  if (error.message.match("429")) {
+    showToast(Style.Failure, "Too many requests", "Too many requests were sent in a short time. Please try again.").then();
+  } else {
+    showToast(Style.Failure, "Error", "Something went wrong. Please try again.").then();
+  }
 }
 
 /**
