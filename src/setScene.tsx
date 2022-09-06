@@ -5,7 +5,7 @@ import { Group, Scene } from "./lib/types";
 import Style = Toast.Style;
 
 export default function SetScene() {
-  const { isLoading, lightsError, groups, mutateGroups, scenes } = useHue();
+  const { isLoading, groups, mutateGroups, scenes } = useHue();
 
   const rooms = groups.filter((group) => group.type === "Room") as Group[];
   const entertainmentAreas = groups.filter((group) => group.type === "Entertainment") as Group[];
