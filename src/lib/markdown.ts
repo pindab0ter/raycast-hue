@@ -14,6 +14,14 @@ export const noBridgeConfiguredMessage = `
 Please use the ‘Manage Hue Bridge’ command to link your Hue Bridge.
 `;
 
+export const discoveringMessage = `
+# Discovering Hue Bridge
+
+![Not Found](${connectImagePath})
+
+Please wait while discovering a Hue Bridge.
+`;
+
 export const bridgeNotFoundMessage = `
 # Could not find the Hue Bridge
 

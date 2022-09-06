@@ -2,6 +2,7 @@ import { assign, createMachine } from "xstate";
 import { discoverBridge, linkWithBridge } from "./hue";
 import { LocalStorage, Toast } from "@raycast/api";
 import {
+  discoveringMessage,
   failedToConnectMessage,
   failedToLinkMessage,
   linkedMessage,
@@ -183,6 +184,8 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
   {
     actions: {
       showDiscovering: async (context) => {
+        context.shouldDisplay = true;
+        context.markdown = discoveringMessage;
         context.toast.style = Style.Animated;
         context.toast.title = "Discovering…";
         context.toast.show().then();
