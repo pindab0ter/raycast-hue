@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Icon, List, Toast } from "@raycast/api";
+import { ActionPanel, Icon, List, Toast } from "@raycast/api";
 import {
   adjustBrightness,
   adjustColorTemperature,
@@ -18,8 +18,8 @@ import { getIconForColor, getLightIcon } from "./lib/utils";
 import { BRIGHTNESS_MAX, BRIGHTNESS_MIN, BRIGHTNESSES, COLOR_TEMP_MAX, COLOR_TEMP_MIN, COLORS } from "./lib/constants";
 import { hexToXy } from "./lib/colors";
 import ManageHueBridge from "./components/ManageHueBridge";
-import Style = Toast.Style;
 import UnlinkAction from "./components/UnlinkAction";
+import Style = Toast.Style;
 
 export default function Command() {
   const { hueBridgeState, sendHueMessage, isLoading, groups, mutateGroups, scenes } = useHue();
