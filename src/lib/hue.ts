@@ -48,12 +48,11 @@ export type SendHueMessage = (message: "link" | "retry" | "done" | "unlink") => 
 //  This happens for example when holding or successively using the 'Increase' or 'Decrease Brightness' action.
 //  This is especially noticeable on groups, since those API calls take longer than those for individual lights.
 export function useHue() {
-  const [hueBridgeState, send] = useMachine(manageHueBridgeMachine);
-
   const {
     isLoading: isLoadingLights,
     data: lights,
     mutate: mutateLights,
+    revalidate: revalidateLights,
   } = useCachedPromise(
     async () => {
       const api = await getAuthenticatedApi();
@@ -72,6 +71,7 @@ export function useHue() {
     isLoading: isLoadingGroups,
     data: groups,
     mutate: mutateGroups,
+    revalidate: revalidateGroups,
   } = useCachedPromise(
     async () => {
       const api = await getAuthenticatedApi();
@@ -90,6 +90,7 @@ export function useHue() {
     isLoading: isLoadingScenes,
     data: scenes,
     mutate: mutateScenes,
+    revalidate: revalidateScenes,
   } = useCachedPromise(
     async () => {
       const api = await getAuthenticatedApi();
@@ -102,6 +103,14 @@ export function useHue() {
       initialData: [] as Scene[],
       onError: handleError,
     }
+  );
+
+  const [hueBridgeState, send] = useMachine(
+    manageHueBridgeMachine(() => {
+      revalidateLights();
+      revalidateGroups();
+      revalidateScenes();
+    })
   );
 
   const sendHueMessage: SendHueMessage = (message: "link" | "retry" | "done" | "unlink") => {
