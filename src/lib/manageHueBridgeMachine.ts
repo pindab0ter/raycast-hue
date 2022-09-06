@@ -164,8 +164,7 @@ export const manageHueBridgeMachine = createMachine<HueContext>(
           src: async (context) => {
             context.bridgeIpAddress = undefined;
             context.bridgeUsername = undefined;
-            await LocalStorage.removeItem(BRIDGE_IP_ADDRESS_KEY);
-            await LocalStorage.removeItem(BRIDGE_USERNAME_KEY);
+            await LocalStorage.clear();
           },
           onDone: {
             target: "discovering",

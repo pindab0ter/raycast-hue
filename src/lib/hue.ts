@@ -99,10 +99,6 @@ export function useHue() {
   );
 
   const sendHueMessage = (message: "link" | "retry" | "unlink") => {
-    if (message === "unlink") {
-      // TODO: Remove all lights, groups and scenes
-    }
-
     send(message.toUpperCase());
   };
 
@@ -123,7 +119,11 @@ function handleError(error: Error): void {
   console.error(error);
 
   if (error.message.match("429")) {
-    showToast(Style.Failure, "Too many requests", "Too many requests were sent in a short time. Please try again.").then();
+    showToast(
+      Style.Failure,
+      "Too many requests",
+      "Too many requests were sent in a short time. Please try again."
+    ).then();
   } else {
     showToast(Style.Failure, "Error", "Something went wrong. Please try again.").then();
   }
