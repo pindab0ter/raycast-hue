@@ -86,7 +86,11 @@ export function useHue() {
     }
   );
 
-  const { isLoading: isLoadingScenes, data: scenes } = useCachedPromise(
+  const {
+    isLoading: isLoadingScenes,
+    data: scenes,
+    mutate: mutateScenes,
+  } = useCachedPromise(
     async () => {
       const api = await getAuthenticatedApi();
       const scenes = await api.scenes.getAll();
@@ -113,6 +117,7 @@ export function useHue() {
     groups,
     mutateGroups,
     scenes,
+    mutateScenes,
   };
 }
 
